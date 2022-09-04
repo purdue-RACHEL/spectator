@@ -1,3 +1,4 @@
+//fbtest.c
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,15 +20,33 @@ void put_pixel(int x, int y, int c) {
 	fbp[pix_off] = c;
 }
 
+void put_pixel_RGB565(int x, int y, char r, char g, char b) {
+	//every pixel is two cosnecutive bytes with 5 bits dedicated to R, 6 to G, and 5 to B
+	unsigned int pix_off = (x * 2) + y * fix_info.line_length;
+	unsigned short c = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+	*((unsigned short *) (fbp + pix_off)) = c;
+}
+
+void put_pixel_RGB24(int x, int y, char r, char g, char b) {
+	unsigned int pix_off = (x * 3) + y * fix_info.line_length;
+	*((uint8_t*) (fbp + pix_off + 0)) = r;
+	*((uint8_t*) (fbp + pix_off + 1)) = g;
+	*((uint8_t*) (fbp + pix_off + 2)) = b;
+}
+
 void draw() {
 	int x, y;
-
+	static size_t count = 0;
+	char r, g, b;
 	for (y = 0; y < var_info.yres; y++) {
 		for (x = 0; x < var_info.xres; x++) {
-			int c = 16 * x / var_info.xres;
-			put_pixel(x, y, c);
+				r = x % 256;
+				g = y % 256;
+				b = count;
+				put_pixel_RGB565(x, y, r, g, b);
 		}
 	}
+	count = ++count % 256;
 }
 
 int main (int argc, char **argv) {
@@ -53,7 +72,7 @@ int main (int argc, char **argv) {
 	memcpy(&var_info_orig, &var_info, sizeof(struct fb_var_screeninfo));
 
 	//This is where you would change the variable screen info if you wanted!!
-	var_info.bits_per_pixel = 8;
+	var_info.bits_per_pixel = 16;
 	if(ioctl(fbfd, FBIOPUT_VSCREENINFO, &var_info)) {
 		printf("Error setting variable screeninfo.\n");
 	}
@@ -68,7 +87,7 @@ int main (int argc, char **argv) {
 	fbp = (char*) mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);
 	if ((int) fbp == -1) printf("Failed to map framebuffer to user memory.\n");
 	else {
-		draw();
+		while (1) draw();
 		sleep(5);
 	}
 
@@ -79,3 +98,5 @@ int main (int argc, char **argv) {
 
 	return EXIT_SUCCESS;
 }
+
+

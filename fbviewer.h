@@ -35,6 +35,8 @@ protected:
 	struct fb_var_screeninfo	var_info;
 	struct fb_fix_screeninfo	fix_info;
 	char*				fbp; //framebuffer pointer
+	int 				fbfd = 0; //framebuffer file descriptor
+	struct fb_var_screeninfo 	var_info_orig;
 
 private:
 	fbviewer(const fbviewer&);
