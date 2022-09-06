@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <linux/fb.h>
+#include <opencv2/opencv.hpp>
 #include <OpenNI.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
