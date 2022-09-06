@@ -5,7 +5,13 @@
  * incremental testing and integration with OpenNI2
  */
 
+// Defines that print stuff
 #define DEBUG
+#define DEBUG_DRAW
+
+
+//Defines that actually get used
+#define DEPTH_SCALE 1
 
 #include <cstdio>
 #include <cstdlib>
@@ -27,6 +33,10 @@ class testviewer {
 	public:
 		testviewer(openni::Device& device, openni::VideoStream& depth, openni::VideoStream& color);
 		~testviewer();
+
+		void draw();
+		void putDepthPixel(int x, int y, const openni::DepthPixel* pixel);
+		void putPixelBGRA32(int x, int y, char b, char g, char r, char a);
 
 		struct fb_var_screeninfo	var_info;
 		struct fb_fix_screeninfo	fix_info;
@@ -54,7 +64,9 @@ testviewer::testviewer(openni::Device& device, openni::VideoStream& depth, openn
 	fbfd(0),
 	m_device(device),
 	m_depthStream(depth),
-	m_colorStream(color)
+	m_colorStream(color),
+	m_depthFrame(openni::VideoFrameRef()),
+	m_colorFrame(openni::VideoFrameRef())
 {
 }
 
@@ -64,6 +76,71 @@ testviewer::~testviewer() {
 		printf("Couldn't revert variable screen info.");
 	}
 	close(fbfd);
+}
+
+void testviewer::draw() {
+#ifdef DEBUG_DRAW
+	printf("In draw():\n");
+#endif /* DEBUG_DRAW */
+	m_depthStream.readFrame(&m_depthFrame);
+	m_colorStream.readFrame(&m_colorFrame);
+#ifdef DEBUG_DRAW
+	printf("Read frame\n");
+#endif /* DEBUG_DRAW */
+	int dataLength = m_depthFrame.getDataSize();
+	int width = m_depthFrame.getWidth();
+	int height = m_depthFrame.getHeight();
+	int xmul = var_info.xres / width;
+	int ymul = var_info.yres / height;
+	if(m_depthFrame.isValid()) {
+#ifdef DEBUG_DRAW
+		printf("Depth frame is valid\n");
+#endif /* DEBUG_DRAW */
+		const openni::DepthPixel* depthData = (const openni::DepthPixel*) m_depthFrame.getData();
+		//Draw depth
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				for(int offx = 0; offx < DEPTH_SCALE; offx++) {
+					for(int offy = 0; offy < DEPTH_SCALE; offy++) {
+						this -> putDepthPixel((x * DEPTH_SCALE) + offx, (y * DEPTH_SCALE) + offy, depthData[x + (y * width)]);
+					}
+				}
+			}
+		}
+	}
+
+	if(m_colorFrame.isValid()) {
+#ifdef DEBUG_DRAW
+		printf("Depth frame is valid\n");
+#endif /* DEBUG_DRAW */
+		const openni::RGB888Pixel* colorData = (const openni::RGB888Pixel*) m_colorFrame.getData();
+		//Draw color
+		for (int y = 0; y < m_colorFrame.getHeight(); y++) {
+			for (int x = 0; x < m_colorFrame.getWidth(); x++) {
+				openni::RGB888Pixel pixel = colorData[x + (y * m_colorFrame.getWidth())];
+				this -> putPixelBGRA32(x, y, pixel.b, pixel.g, pixel.r, 0);
+			}
+		}
+	}
+}
+
+void testviewer::putDepthPixel(int x, int y, const openni::DepthPixel* pixel) {
+	uint8_t val = 0xFF - ((uint16_t) pixel >> 8);
+	if (var_info.bits_per_pixel == 32) {
+		putPixelBGRA32(x, y, val, val, val, 0);
+	} else {
+#ifdef DEBUG_DRAW
+		printf("Unsupported pixel bit width, try 32bpp.\n");
+#endif /* DEBUG_DRAW */
+	}
+}
+
+void testviewer::putPixelBGRA32(int x, int y, char b, char g, char r, char a) {
+        unsigned int pix_off = (x * 4) + y * fix_info.line_length;
+        *((uint8_t*) (fbp + pix_off + 0)) = b;
+        *((uint8_t*) (fbp + pix_off + 1)) = g;
+        *((uint8_t*) (fbp + pix_off + 2)) = r;
+	*((uint8_t*) (fbp + pix_off + 3)) = a;
 }
 
 int main(int argc, char** argv) {
@@ -107,6 +184,22 @@ int main(int argc, char** argv) {
 	}
 #ifdef DEBUG
 	printf("Depth stream started\n");
+#endif /* DEBUG */
+
+	rc = color.create(device, openni::SENSOR_DEPTH);
+	if (rc != openni::STATUS_OK) {
+		printf("Couldn't find color stream\n");
+		return rc;
+	} else {
+		rc = color.start();
+		if (rc != openni::STATUS_OK) {
+			printf("Couldn't start depth stream\n");
+			color.destroy();
+			return rc;
+		}
+	}
+#ifdef DEBUG
+	printf("Color stream started\n");
 #endif /* DEBUG */
 
 	testviewer viewer = testviewer(device, depth, color);
@@ -160,6 +253,8 @@ int main(int argc, char** argv) {
 #ifdef DEBUG
 	printf("Mapped fb to user memory.\n");
 #endif /* DEBUG */
+
+	while (1) viewer.draw();
 
 	printf("No errors!\n");
 	return EXIT_SUCCESS;
