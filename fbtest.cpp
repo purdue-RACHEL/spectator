@@ -67,7 +67,9 @@ testviewer::testviewer(openni::Device& device, openni::VideoStream& depth, openn
 	m_depthStream(depth),
 	m_colorStream(color),
 	m_depthFrame(openni::VideoFrameRef()),
-	m_colorFrame(openni::VideoFrameRef())
+	m_colorFrame(openni::VideoFrameRef()),
+	m_depthVideoMode(depth.getVideoMode()),
+	m_colorVideoMode(color.getVideoMode())
 {
 }
 
@@ -93,7 +95,7 @@ void testviewer::draw() {
 	int height = m_depthFrame.getHeight();
 	int xmul = var_info.xres / width;
 	int ymul = var_info.yres / height;
-	if(m_depthFrame.isValid()) {
+	if(m_depthFrame.isValid() && 0) {
 #ifdef DEBUG_DRAW
 		printf("Depth frame is valid\n");
 #endif /* DEBUG_DRAW */
@@ -112,7 +114,8 @@ void testviewer::draw() {
 
 	if(m_colorFrame.isValid()) {
 #ifdef DEBUG_DRAW
-		printf("Depth frame is valid\n");
+		printf("Color frame is valid\n");
+		printf("Color PixelFormat:%d\n", m_colorVideoMode.getPixelFormat());
 #endif /* DEBUG_DRAW */
 		const openni::RGB888Pixel* colorData = (const openni::RGB888Pixel*) m_colorFrame.getData();
 		//Draw color
@@ -187,7 +190,7 @@ int main(int argc, char** argv) {
 	printf("Depth stream started\n");
 #endif /* DEBUG */
 
-	rc = color.create(device, openni::SENSOR_DEPTH);
+	rc = color.create(device, openni::SENSOR_COLOR);
 	if (rc != openni::STATUS_OK) {
 		printf("Couldn't find color stream\n");
 		return rc;
