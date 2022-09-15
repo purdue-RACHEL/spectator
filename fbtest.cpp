@@ -201,10 +201,10 @@ int main(int argc, char** argv) {
 			color.destroy();
 			return rc;
 		}
-	}
 #ifdef DEBUG
 	printf("Color stream started\n");
 #endif /* DEBUG */
+	}
 
 	testviewer viewer = testviewer(device, depth, color);
 #ifdef DEBUG
