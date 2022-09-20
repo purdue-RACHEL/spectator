@@ -9,6 +9,7 @@
 #define DEBUG
 #define DEBUG_DRAW
 
+#include "blobDetector.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -311,6 +312,7 @@ int main(int argc, char** argv) {
 	
 	std::vector<struct PixelBGR> palette;
 	generate16BitPalette(palette);
+	initBlobDetection();
 
 	for (;;) {
 		cv::Mat eightbit = cam.readDepth();
@@ -321,10 +323,11 @@ int main(int argc, char** argv) {
 		colorized_16bit_palette = convert16U2palette(sixteenbit, palette);
 		cv::equalizeHist(eightbit, equalized);
 		cv::applyColorMap(equalized, eq_color, cv::COLORMAP_AUTUMN);
-		cv::imshow("8bit depth", eightbit);
-		cv::imshow("equalized", equalized);
-		cv::imshow("colorized compressed depth", eq_color);
-		cv::imshow("colorized uncompressed depth", colorized_16bit_palette);
+		//cv::imshow("8bit depth", eightbit);
+		//cv::imshow("equalized", equalized);
+		//cv::imshow("colorized compressed depth", eq_color);
+		//cv::imshow("colorized uncompressed depth", colorized_16bit_palette);
+		detectBlob(colorized_16bit_palette);
 		cv::waitKey(25);
 	}
 	printf("No errors!\n");

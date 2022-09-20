@@ -13,14 +13,20 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "blobDetector.h"
+
 using namespace std;
 using namespace cv;
 
 #define DEBUG_BLOB_DETECTOR
-
+Ptr<SimpleBlobDetector> detector;
 int main(int argc, char** argv) {
-	Mat im = imread("/home/rachel/Pictures/Random-On-Screen/1.tif", IMREAD_GRAYSCALE);
-
+	Mat im = imread("/home/rachel/Pictures/Random-On-Screen/1.tif", IMREAD_COLOR);
+	initBlobDetection();
+	detectBlob(im);
+	return EXIT_SUCCESS;
+}
+int initBlobDetection(){
 	SimpleBlobDetector::Params params;
 	
 	/* Default params.
@@ -65,12 +71,26 @@ int main(int argc, char** argv) {
 	params.minConvexity = 0.95f;
 	params.maxConvexity = (float) 1e37;
 	
-	Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
-	std::vector<KeyPoint> keypoints;
+	detector = SimpleBlobDetector::create(params);
+	return EXIT_SUCCESS;
+}
 
-	detector -> detect(im, keypoints);
-	Mat im_with_keypoints;
-	drawKeypoints(im, keypoints, im_with_keypoints, Scalar(255,0,0), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-	imshow("keypoints", im_with_keypoints);
+int detectBlob(Mat im){
+
+	//im: matrix representing photo
+	Mat imgray, im_gauss, im_thresh, im_hierarchy;
+	vector<vector<Point>> contours; 
+	cvtColor(im, imgray, COLOR_BGR2GRAY);
+	GaussianBlur(imgray, im_gauss, Size(5,5), 0);
+	threshold(im_gauss, im_thresh, 212, 255, THRESH_BINARY);
+	imshow("Original", im);
+	findContours(im_thresh, contours, im_hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+	drawContours(im, contours, -1, Scalar(255,172,172));
+	imshow("Contours", im);
+	#ifdef DEBUG_BLOB_DETECTOR
+	//cerr << "Key Points Found: " <<keypoints.size() << endl;
+	#endif
+	//imshow("keypoints", im_gauss);
 	waitKey();
+	return EXIT_SUCCESS;
 }
