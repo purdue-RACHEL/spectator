@@ -26,6 +26,112 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+struct PixelBGR {
+	double b;
+	double g;
+	double r;
+};
+
+struct PixelHSV {
+	double h;
+	double s;
+	double v;
+};
+	
+cv::Mat convert16U2palette(cv::Mat& sixteenbit, std::vector<struct PixelBGR>& palette) {
+	cv::Mat outMat(sixteenbit.rows, sixteenbit.cols, CV_8UC3), chans[3];
+	chans[0] = cv::Mat::zeros(sixteenbit.rows, sixteenbit.cols, CV_8UC1);
+	chans[1] = cv::Mat::zeros(sixteenbit.rows, sixteenbit.cols, CV_8UC1);
+	chans[2] = cv::Mat::zeros(sixteenbit.rows, sixteenbit.cols, CV_8UC1);
+	for (int y = 0; y < sixteenbit.rows; y++) {
+		for (int x = 0; x < sixteenbit.cols; x++) {
+			chans[0].at<uint8_t>(y, x) = (uint8_t) palette[sixteenbit.at<uint16_t>(y, x)].r;
+			chans[1].at<uint8_t>(y, x) = (uint8_t) palette[sixteenbit.at<uint16_t>(y, x)].g;
+			chans[2].at<uint8_t>(y, x) = (uint8_t) palette[sixteenbit.at<uint16_t>(y, x)].b;
+		}
+	}
+	cv::merge(chans, 3, outMat);
+	return outMat;
+}
+
+struct PixelBGR hsv2rgb(struct PixelHSV in)
+{
+    double      hh, p, q, t, ff;
+    long        i;
+    PixelBGR         out;
+
+    if(in.s <= 0.0) {       // < is bogus, just shuts up warnings
+        out.r = in.v;
+        out.g = in.v;
+        out.b = in.v;
+        return out;
+    }
+    hh = in.h;
+    if(hh >= 360.0) hh = 0.0;
+    hh /= 60.0;
+    i = (long)hh;
+    ff = hh - i;
+    p = in.v * (1.0 - in.s);
+    q = in.v * (1.0 - (in.s * ff));
+    t = in.v * (1.0 - (in.s * (1.0 - ff)));
+
+    switch(i) {
+    case 0:
+        out.r = in.v;
+        out.g = t;
+        out.b = p;
+        break;
+    case 1:
+        out.r = q;
+        out.g = in.v;
+        out.b = p;
+        break;
+    case 2:
+        out.r = p;
+        out.g = in.v;
+        out.b = t;
+        break;
+
+    case 3:
+        out.r = p;
+        out.g = q;
+        out.b = in.v;
+        break;
+    case 4:
+        out.r = t;
+        out.g = p;
+        out.b = in.v;
+        break;
+    case 5:
+    default:
+        out.r = in.v;
+        out.g = p;
+        out.b = q;
+        break;
+    }
+    out.r *= 255;
+    out.g *= 255;
+    out.b *= 255;
+    return out;     
+}
+
+
+void generate16BitPalette(std::vector<struct PixelBGR>& palette) {
+	struct PixelBGR pix;
+	struct PixelHSV hsv;
+	hsv.s = 1.0;
+	hsv.v = 1.0;
+	size_t num_revs = 8;
+
+	for (int i = 0; i < 65536; i++) {
+		hsv.h = (double) (( (long) (num_revs * 360.0 * (i / 65536.0)) ) % 360);
+		hsv.s = 0.9;
+		hsv.v = 0.9;
+		pix = hsv2rgb(hsv);
+		palette.push_back(pix);
+	}
+}
+
 class CameraInterface {
 	public:
 		CameraInterface(openni::Device& device, openni::VideoStream& depth, openni::VideoStream& color);
@@ -33,6 +139,7 @@ class CameraInterface {
 
 		cv::Mat readDepth();
 		cv::Mat readDepth16U();
+		cv::Mat readDepthBGR565();
 		cv::Mat readColor();
 		void drawRLOF();
 
@@ -85,7 +192,30 @@ cv::Mat CameraInterface::readDepth16U() {
 	size_t depthSize = width * height;
 	cv::Mat depthMat = cv::Mat(m_depthFrame.getHeight(), m_depthFrame.getWidth(), CV_16UC1, (void *) m_depthFrame.getData());
 	depthMat = depthMat.clone();
-	return depthMat;
+	cv::Mat outMat(height, width, CV_16UC1);
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			outMat.at<uint16_t>(y, width - x) = (depthMat.at<uint16_t>(y, x));
+		}
+	}
+	return outMat;
+}
+
+cv::Mat CameraInterface::readDepthBGR565() {
+	cv::Mat depthMat = readDepth16U();
+	cv::Mat outMat(depthMat.rows, depthMat.cols, CV_8UC3);
+	cv::Mat chans[3];
+	cv::split(outMat, chans);
+	for (int y = 0; y < depthMat.rows; y++) {
+		for (int x = 0; x < depthMat.cols; x++) {
+			uint16_t inMat = depthMat.at<uint16_t>(y, x);
+			chans[0].at<uint8_t>(y, x) = ((inMat >> 8) && 0xFF);
+			chans[1].at<uint8_t>(y, x) = ((inMat >> 4) && 0xFF);
+			chans[2].at<uint8_t>(y, x) = ((inMat >> 0) && 0xFF);
+		}
+	}
+	cv::merge(chans, 3, outMat);
+	return outMat;
 }
 
 
@@ -178,16 +308,24 @@ int main(int argc, char** argv) {
 #endif /* DEBUG */
 
 	//cam.drawRLOF(thisFrame, lastFrame); //doesn't return
+	
+	std::vector<struct PixelBGR> palette;
+	generate16BitPalette(palette);
 
 	for (;;) {
 		cv::Mat eightbit = cam.readDepth();
-		cv::Mat equalized, eq_color;
+		cv::Mat equalized, eq_color, bgr565, sixteenbit, colorized_16bit_palette;
+		sixteenbit = cam.readDepth16U();
+		//cv::cvtColor(sixteenbit, bgr565, cv::COLOR_BGR5652BGR, 3);
+		sixteenbit = cam.readDepth16U();
+		colorized_16bit_palette = convert16U2palette(sixteenbit, palette);
 		cv::equalizeHist(eightbit, equalized);
 		cv::applyColorMap(equalized, eq_color, cv::COLORMAP_AUTUMN);
 		cv::imshow("8bit depth", eightbit);
 		cv::imshow("equalized", equalized);
-		cv::imshow("colorized", eq_color);
-		cv::waitKey(0);
+		cv::imshow("colorized compressed depth", eq_color);
+		cv::imshow("colorized uncompressed depth", colorized_16bit_palette);
+		cv::waitKey(25);
 	}
 	printf("No errors!\n");
 	return EXIT_SUCCESS;
