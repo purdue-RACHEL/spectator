@@ -32,11 +32,11 @@ int main(int argc, char ** argv){
     if(tcgetattr(serial_port, &tty) != 0) {
         printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
     }
-    // char read_buf;
-    // int n = read(serial_port, &read_buf, sizeof(read_buf));
-    // printf("%c\n",read_buf);
     char sendByte;
     sendByte = 'a'; 
     write(serial_port, &sendByte, 1);
+    char read_buf;
+    int n = read(serial_port, &read_buf, sizeof(read_buf));
+    printf("%c\n",read_buf);
     close(serial_port);
 }

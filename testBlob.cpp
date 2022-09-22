@@ -19,13 +19,15 @@ using namespace std;
 using namespace cv;
 
 #define DEBUG_BLOB_DETECTOR
-Ptr<SimpleBlobDetector> detector;
+/*
+//Ptr<SimpleBlobDetector> detector;
 int main(int argc, char** argv) {
 	Mat im = imread("/home/rachel/Pictures/Random-On-Screen/1.tif", IMREAD_COLOR);
-	initBlobDetection();
+	//initBlobDetection();
 	detectBlob(im);
 	return EXIT_SUCCESS;
 }
+*/
 int initBlobDetection(){
 	SimpleBlobDetector::Params params;
 	
@@ -50,28 +52,7 @@ int initBlobDetection(){
 	params.minConvexity = 0.95f;
 	params.maxConvexity = (float) 1e37;
 	*/
-	
-	params.thresholdStep = 10;
-	params.minThreshold = 10;
-	params.maxThreshold = 220;
-	params.minRepeatability = 1;
-	params.minDistBetweenBlobs = 10;
-	params.filterByColor = true;
-	params.blobColor = 0xd4;
-	params.filterByArea = false;
-	params.minArea = 25;
-	params.maxArea = 500;
-	params.filterByCircularity = false;
-	params.minCircularity = 0.9f;
-	params.maxCircularity = (float) 1e37;
-	params.filterByInertia = false;
-	params.minInertiaRatio = 0.1f;
-	params.maxInertiaRatio = (float) 1e37;
-	params.filterByConvexity = false;
-	params.minConvexity = 0.95f;
-	params.maxConvexity = (float) 1e37;
-	
-	detector = SimpleBlobDetector::create(params);
+	//detector = SimpleBlobDetector::create(params);
 	return EXIT_SUCCESS;
 }
 
@@ -80,17 +61,19 @@ int detectBlob(Mat im){
 	//im: matrix representing photo
 	Mat imgray, im_gauss, im_thresh, im_hierarchy;
 	vector<vector<Point>> contours; 
-	cvtColor(im, imgray, COLOR_BGR2GRAY);
+	//cvtColor(im, imgray, COLOR_BGR2GRAY);
+	imgray = im;
 	GaussianBlur(imgray, im_gauss, Size(5,5), 0);
-	threshold(im_gauss, im_thresh, 212, 255, THRESH_BINARY);
-	imshow("Original", im);
+	// Threshold for test images: 212
+	threshold(im_gauss, im_thresh, 120, 255, THRESH_BINARY);
+	imshow("Threshold", im_thresh);
 	findContours(im_thresh, contours, im_hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-	drawContours(im, contours, -1, Scalar(255,172,172));
-	imshow("Contours", im);
+	drawContours(imgray, contours, -1, Scalar(255,172,172));
+	imshow("Contours", imgray);
 	#ifdef DEBUG_BLOB_DETECTOR
 	//cerr << "Key Points Found: " <<keypoints.size() << endl;
 	#endif
 	//imshow("keypoints", im_gauss);
-	waitKey();
+	//waitKey();
 	return EXIT_SUCCESS;
 }

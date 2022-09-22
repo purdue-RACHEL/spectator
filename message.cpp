@@ -31,6 +31,7 @@ int main(int argc, char ** argv){
     
 }
 
+
 // SETUP UART CONNECTION WITH CORRECT PARAMETERS
 int setupUart(){
     struct termios tty;

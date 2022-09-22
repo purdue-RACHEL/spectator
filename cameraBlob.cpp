@@ -139,6 +139,8 @@ class CameraInterface {
 		~CameraInterface();
 
 		cv::Mat readDepth();
+		
+		cv::Mat readDepthSlice(uint16_t start);
 		cv::Mat readDepth16U();
 		cv::Mat readDepthBGR565();
 		cv::Mat readColor();
@@ -186,6 +188,21 @@ cv::Mat CameraInterface::readDepth() {
 	return outMat;
 }
 
+cv::Mat CameraInterface::readDepthSlice(uint16_t start) {
+	m_depthStream.readFrame(&m_depthFrame);
+	size_t width = m_depthFrame.getWidth();
+	size_t height = m_depthFrame.getHeight();
+	size_t depthSize = width * height;
+	cv::Mat depthMat = cv::Mat(m_depthFrame.getHeight(), m_depthFrame.getWidth(), CV_16UC1, (void *) m_depthFrame.getData());
+	depthMat = depthMat.clone();
+	cv::Mat outMat(height, width, CV_8UC1);
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			outMat.at<uint8_t>(y, width - x) = (uint8_t)(depthMat.at<uint16_t>(y, x)-start);
+		}
+	}
+	return outMat;
+}
 cv::Mat CameraInterface::readDepth16U() {
 	m_depthStream.readFrame(&m_depthFrame);
 	size_t width = m_depthFrame.getWidth();
@@ -312,10 +329,10 @@ int main(int argc, char** argv) {
 	
 	std::vector<struct PixelBGR> palette;
 	generate16BitPalette(palette);
-	initBlobDetection();
 
 	for (;;) {
-		cv::Mat eightbit = cam.readDepth();
+		cv::Mat eightbit = cam.readDepthSlice(0); //reads 8 bit depth image from openni
+		//cv::Mat eightbit = cam.readDepth();
 		cv::Mat equalized, eq_color, bgr565, sixteenbit, colorized_16bit_palette;
 		sixteenbit = cam.readDepth16U();
 		//cv::cvtColor(sixteenbit, bgr565, cv::COLOR_BGR5652BGR, 3);
@@ -327,7 +344,8 @@ int main(int argc, char** argv) {
 		//cv::imshow("equalized", equalized);
 		//cv::imshow("colorized compressed depth", eq_color);
 		//cv::imshow("colorized uncompressed depth", colorized_16bit_palette);
-		detectBlob(colorized_16bit_palette);
+		//detectBlob(colorized_16bit_palette);
+		detectBlob(equalized);
 		cv::waitKey(25);
 	}
 	printf("No errors!\n");
