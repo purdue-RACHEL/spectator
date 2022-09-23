@@ -64,12 +64,14 @@ int detectBlob(Mat im){
 	//cvtColor(im, imgray, COLOR_BGR2GRAY);
 	imgray = im;
 	GaussianBlur(imgray, im_gauss, Size(5,5), 0);
+	imshow("Slice", im);
 	// Threshold for test images: 212
 	threshold(im_gauss, im_thresh, 120, 255, THRESH_BINARY);
 	imshow("Threshold", im_thresh);
 	findContours(im_thresh, contours, im_hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-	drawContours(imgray, contours, -1, Scalar(255,172,172));
-	imshow("Contours", imgray);
+	Mat black(im_thresh.rows, im_thresh.cols, CV_8UC3, cv::Scalar(0, 0, 0));;
+	drawContours(black, contours, -1, Scalar(255,172,172));
+	imshow("Contours", black);
 	#ifdef DEBUG_BLOB_DETECTOR
 	//cerr << "Key Points Found: " <<keypoints.size() << endl;
 	#endif
