@@ -1,4 +1,3 @@
-#include "mainLoop.h"
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -6,34 +5,30 @@
 #include <termios.h>
 #include <unistd.h>
 #include <iostream>
+#include "message.h"
 
 
 using namespace std;
 
-// GLOBAL VARIABLES
-int curr_press;
-int curr_bounce;
-
 // TEST MAIN FOR DEBUGGING
 int main(int argc, char ** argv){
-    int serial_port = setupUart();
-    if(serial_port == 0){
+	string deviceStr = "/dev/USB0";
+	UartDecoder uart = UartDecoder(deviceStr);
+    if(uart.serial_port == 0){
         cout << "Problem Setting Up Serial Port" << endl;
         return 1;
     }
-    if(decode(0xFC)){
+    if(uart.decode(0xFC)){
         cerr << "Decode Message Failed" << endl;
         return 1;
     }
-    cout << "BUTTON PRESSED: " << curr_press << endl;
-    cout << "BALL BOUNCED: " << curr_bounce << endl;
-    close(serial_port);
-    
+    cout << "BUTTON PRESSED: " << uart.curr_press << endl;
+    cout << "BALL BOUNCED: " << uart.curr_bounce << endl;
 }
 
 
 // SETUP UART CONNECTION WITH CORRECT PARAMETERS
-int setupUart(){
+UartDecoder::UartDecoder(string& deviceName){
     struct termios tty;
     tty.c_cflag &= ~PARENB; // Parity Bit
     tty.c_cflag &= ~CSTOPB; // Stop Bit
@@ -50,35 +45,40 @@ int setupUart(){
     cfsetospeed(&tty, B115200);
 
     // Catch errors
-    int serial_port = open(DEVICE, O_RDWR);
+    char arr[deviceName.length() + 1];
+    strcpy(arr, deviceName.c_str());
+    serial_port = open(arr, O_RDWR);
     if (serial_port < 0) {
         printf("Error %i from open: %s\n", errno, strerror(errno));
-        return 0;
+	return;
     }
 
     if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
         printf("Error %i from tcsetattr: %s\n", errno, strerror(errno));
-        return 0;
+        return;
     }
     if(tcgetattr(serial_port, &tty) != 0) {
         printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
-        return 0;
+        return;
     }
-    return serial_port;  
 }
 
 // DECODE MESSAGE AND SET GLOBAL VARIABLES
-int decode(unsigned char message){
+int UartDecoder::decode(unsigned char message){
     if(!(message & BUTTON_PRESS_MASK)){
-        curr_press = NONE;
+	    UartDecoder::curr_press = NONE;
     }else{
-        curr_press = (message & BUTTON_MASK) >> 3;
+	    UartDecoder::curr_press = (message & BUTTON_MASK) >> BUTTON_SHIFT;
     }
     unsigned char bounce_message = (message & BOUNCE_MASK);
     if((bounce_message == 0)||(bounce_message == 3)){
-        curr_bounce = NONE;
+	    UartDecoder::curr_bounce = NONE;
     }else{
-        curr_bounce = (message & BOUNCE_MASK) >> 1;
+	    UartDecoder::curr_bounce = (message & BOUNCE_MASK) >> BOUNCE_SHIFT;
     }
     return 0;
+}
+
+void UartDecoder::closePort(){
+	close(serial_port);
 }

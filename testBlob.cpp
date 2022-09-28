@@ -59,17 +59,17 @@ int initBlobDetection(){
 int detectBlob(Mat im){
 
 	//im: matrix representing photo
-	Mat imgray, im_gauss, im_thresh, im_hierarchy;
+	cv::Mat imgray, im_gauss, im_thresh, im_hierarchy;
 	vector<vector<Point>> contours; 
 	//cvtColor(im, imgray, COLOR_BGR2GRAY);
 	imgray = im;
-	GaussianBlur(imgray, im_gauss, Size(5,5), 0);
-	imshow("Slice", im);
+	cv::GaussianBlur(imgray, im_gauss, Size(11,11), 0);
+	cv::imshow("Slice", im);
 	// Threshold for test images: 212
-	threshold(im_gauss, im_thresh, 120, 255, THRESH_BINARY);
-	imshow("Threshold", im_thresh);
-	findContours(im_thresh, contours, im_hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-	Mat black(im_thresh.rows, im_thresh.cols, CV_8UC3, cv::Scalar(0, 0, 0));;
+	cv::threshold(im_gauss, im_thresh, 120, 255, THRESH_BINARY);
+	cv::imshow("Threshold", im_thresh);
+	cv::findContours(im_thresh, contours, im_hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+	cv::Mat black(im_thresh.rows, im_thresh.cols, CV_8UC3, cv::Scalar(0, 0, 0));;
 	drawContours(black, contours, -1, Scalar(255,172,172));
 	imshow("Contours", black);
 	#ifdef DEBUG_BLOB_DETECTOR
