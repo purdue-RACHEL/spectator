@@ -12,20 +12,19 @@ using namespace std;
 
 // TEST MAIN FOR DEBUGGING
 int main(int argc, char ** argv){
-	string deviceStr = "/dev/USB0";
+	string deviceStr = "/dev/ttyUSB0";
 	UartDecoder uart = UartDecoder(deviceStr);
     if(uart.serial_port == 0){
         cout << "Problem Setting Up Serial Port" << endl;
         return 1;
     }
-    if(uart.decode(0xFC)){
-        cerr << "Decode Message Failed" << endl;
-        return 1;
-    }
+    int messagei = 0;
     for(;;){
         uart.readSerial();
+	printf("New Message %d\n",messagei);
         printf("Current Button: %d\n", uart.getButton());
         printf("Current Bounce: %d\n", uart.getBounce());
+	messagei++;
     }
 
 
@@ -72,20 +71,27 @@ UartDecoder::UartDecoder(string& deviceName){
 // DECODE MESSAGE AND SET GLOBAL VARIABLES
 int UartDecoder::decode(unsigned char message){
     UartDecoder& decoder= *this;
-    if(message & ERROR_MASK){
-        return 1;
-    }
+    int temp_press;
+    int temp_bounce;
     if(!(message & BUTTON_PRESS_MASK)){
-	    decoder.curr_press = NOPRESS;
+	    temp_press = NOPRESS;
     }else{
-	    decoder.curr_press = (message & BUTTON_MASK) >> BUTTON_SHIFT;
+	    temp_press = (message & BUTTON_MASK) >> BUTTON_SHIFT;
     }
     unsigned char bounce_message = (message & BOUNCE_MASK);
     if((bounce_message == 0)||(bounce_message == 3)){
-	    decoder.curr_bounce = NOBOUNCE;
+	    temp_bounce = NOBOUNCE;
     }else{
-	    decoder.curr_bounce = (message & BOUNCE_MASK) >> BOUNCE_SHIFT;
+	    temp_bounce = (message & BOUNCE_MASK) >> BOUNCE_SHIFT;
     }
+    if(message & ERROR_MASK){
+	    if(temp_press != NOPRESS){
+		    decoder.curr_press = temp_press;
+	    }
+        return 1;
+    }
+    decoder.curr_press = temp_press;
+    decoder.curr_bounce = temp_bounce;
     return 0;
 }
 
@@ -101,8 +107,8 @@ int UartDecoder::getButton(){
 
 int UartDecoder::readSerial(){
     UartDecoder& decoder = *this;
-    char send_buf = 1;
-    write(serial_port, send_buf, 1);
+    char send_buf = 0x01;
+    write(decoder.serial_port, &send_buf, sizeof(send_buf));
     char read_buf;
     int n = read(decoder.serial_port, &read_buf, sizeof(read_buf));
     if(n ==0 ){
