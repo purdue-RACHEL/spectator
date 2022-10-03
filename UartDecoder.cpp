@@ -24,8 +24,8 @@ int main(int argc, char ** argv){
     }
     for(;;){
         uart.readSerial();
-        printf("Current Button: %d\n", uart.getButton);
-        printf("Current Bounce: %d\n", uart.getBounce);
+        printf("Current Button: %d\n", uart.getButton());
+        printf("Current Bounce: %d\n", uart.getBounce());
     }
 
 
@@ -76,13 +76,13 @@ int UartDecoder::decode(unsigned char message){
         return 1;
     }
     if(!(message & BUTTON_PRESS_MASK)){
-	    decoder.curr_press = NONE;
+	    decoder.curr_press = NOPRESS;
     }else{
 	    decoder.curr_press = (message & BUTTON_MASK) >> BUTTON_SHIFT;
     }
     unsigned char bounce_message = (message & BOUNCE_MASK);
     if((bounce_message == 0)||(bounce_message == 3)){
-	    decoder.curr_bounce = NONE;
+	    decoder.curr_bounce = NOBOUNCE;
     }else{
 	    decoder.curr_bounce = (message & BOUNCE_MASK) >> BOUNCE_SHIFT;
     }
@@ -96,7 +96,7 @@ enum Bounce UartDecoder::getBounce(){
 
 enum Button UartDecoder::getButton(){
     UartDecoder& decoder = *this;
-    return decoder.currButton;
+    return decoder.curr_press;
 }
 
 int UartDecoder::readSerial(){
@@ -106,7 +106,7 @@ int UartDecoder::readSerial(){
     if(n ==0 ){
         return 1;
     }
-    if(this.decode(read_buf)){
+    if(decoder.decode(read_buf)){
         return 1;
     }
     return 0;

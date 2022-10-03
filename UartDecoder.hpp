@@ -6,7 +6,6 @@
 #define BUTTON_MASK 0x0F
 #define BOUNCE_MASK 0x60
 #define BOUNCE_SHIFT 5
-#define NONE -1
 #define ERROR_MASK 0x80
 #define ERROR_SHIT 7
 
@@ -14,7 +13,8 @@
 #define DEVICE "/dev/ttyUSB0"
 #include <string.h>
 enum Button{
-    ONE,
+    NOPRESS = -1,
+    ONE = 1,
     TWO,
     THREE,
     FOUR,
@@ -32,6 +32,7 @@ enum Button{
 };
 
 enum Bounce{
+    NOBOUNCE = -1,
     LEFT=1,
     RIGHT,
 };
