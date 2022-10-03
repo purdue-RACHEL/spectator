@@ -7,15 +7,12 @@
 #define BOUNCE_MASK 0x60
 #define BOUNCE_SHIFT 5
 #define NONE -1
+#define ERROR_MASK 0x80
+#define ERROR_SHIT 7
 
 // LINUX TTY ASSOCIATED WITH SERIAL DEVICE
 #define DEVICE "/dev/ttyUSB0"
 #include <string.h>
-class UartDecoder{
-	public:
-		int curr_bounce;
-		int curr_press;
-		int serial_port;
 enum Button{
     ONE,
     TWO,
@@ -38,6 +35,11 @@ enum Bounce{
     LEFT=1,
     RIGHT,
 };
+class UartDecoder{
+	public:
+		enum Bounce curr_bounce;
+		enum Button curr_press;
+		int serial_port;
 
 UartDecoder(std::string&);
 int decode(unsigned char message);

@@ -50,7 +50,7 @@ UartDecoder::UartDecoder(string& deviceName){
     serial_port = open(arr, O_RDWR);
     if (serial_port < 0) {
         printf("Error %i from open: %s\n", errno, strerror(errno));
-	return;
+	    return;
     }
 
     if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
@@ -65,16 +65,43 @@ UartDecoder::UartDecoder(string& deviceName){
 
 // DECODE MESSAGE AND SET GLOBAL VARIABLES
 int UartDecoder::decode(unsigned char message){
+    UartDecoder& decoder= *this;
+    if(message & ERROR_MASK){
+        return 1;
+    }
     if(!(message & BUTTON_PRESS_MASK)){
-	    UartDecoder::curr_press = NONE;
+	    decoder.curr_press = NONE;
     }else{
-	    UartDecoder::curr_press = (message & BUTTON_MASK) >> BUTTON_SHIFT;
+	    decoder.curr_press = (message & BUTTON_MASK) >> BUTTON_SHIFT;
     }
     unsigned char bounce_message = (message & BOUNCE_MASK);
     if((bounce_message == 0)||(bounce_message == 3)){
-	    UartDecoder::curr_bounce = NONE;
+	    decoder.curr_bounce = NONE;
     }else{
-	    UartDecoder::curr_bounce = (message & BOUNCE_MASK) >> BOUNCE_SHIFT;
+	    decoder.curr_bounce = (message & BOUNCE_MASK) >> BOUNCE_SHIFT;
+    }
+    return 0;
+}
+
+enum Bounce UartDecoder::getBounce(){
+    UartDecoder& decoder= *this;
+    return decoder.curr_bounce;
+}
+
+enum Button UartDecoder::getButton(){
+    UartDecoder& decoder = *this;
+    return decoder.currButton;
+}
+
+int UartDecoder::readSerial(){
+    UartDecoder& decoder = *this;
+    char read_buf;
+    int n = read(decoder.serial_port, &read_buf, sizeof(read_buf));
+    if(n ==0 ){
+        return 1;
+    }
+    if(this.decode(read_buf)){
+        return 1;
     }
     return 0;
 }
