@@ -38,8 +38,8 @@ enum Bounce{
 };
 class UartDecoder{
 	public:
-		enum Bounce curr_bounce;
-		enum Button curr_press;
+		int curr_bounce;
+		int curr_press;
 		int serial_port;
 
 UartDecoder(std::string&);
