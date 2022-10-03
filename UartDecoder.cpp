@@ -89,12 +89,12 @@ int UartDecoder::decode(unsigned char message){
     return 0;
 }
 
-enum Bounce UartDecoder::getBounce(){
+int UartDecoder::getBounce(){
     UartDecoder& decoder= *this;
     return decoder.curr_bounce;
 }
 
-enum Button UartDecoder::getButton(){
+int UartDecoder::getButton(){
     UartDecoder& decoder = *this;
     return decoder.curr_press;
 }
