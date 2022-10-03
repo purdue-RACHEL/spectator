@@ -101,6 +101,7 @@ int UartDecoder::getButton(){
 
 int UartDecoder::readSerial(){
     UartDecoder& decoder = *this;
+    write(serial_port, 0x01, 1);
     char read_buf;
     int n = read(decoder.serial_port, &read_buf, sizeof(read_buf));
     if(n ==0 ){
