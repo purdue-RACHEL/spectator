@@ -5,7 +5,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <iostream>
-#include "message.h"
+#include "UartDecoder.hpp"
 
 
 using namespace std;
