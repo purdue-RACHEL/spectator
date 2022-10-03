@@ -22,8 +22,14 @@ int main(int argc, char ** argv){
         cerr << "Decode Message Failed" << endl;
         return 1;
     }
-    cout << "BUTTON PRESSED: " << uart.curr_press << endl;
-    cout << "BALL BOUNCED: " << uart.curr_bounce << endl;
+    for(;;){
+        uart.readSerial();
+        printf("Current Button: %d\n", uart.getButton);
+        printf("Current Bounce: %d\n", uart.getBounce);
+    }
+
+
+    return 0;
 }
 
 

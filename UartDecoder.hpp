@@ -43,6 +43,9 @@ class UartDecoder{
 
 UartDecoder(std::string&);
 int decode(unsigned char message);
+enum Button getButton();
+enum Bounce getBounce();
+int readSerial();
 void closePort();
 };
 #endif
