@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include <fcntl.h>
 #include <errno.h>
 #include <termios.h>
@@ -10,6 +11,7 @@
 
 using namespace std;
 
+#ifdef TESTDECODER
 // TEST MAIN FOR DEBUGGING
 int main(int argc, char ** argv){
 	string deviceStr = "/dev/ttyUSB0";
@@ -30,6 +32,7 @@ int main(int argc, char ** argv){
 
     return 0;
 }
+#endif
 
 
 // SETUP UART CONNECTION WITH CORRECT PARAMETERS
@@ -95,14 +98,14 @@ int UartDecoder::decode(unsigned char message){
     return 0;
 }
 
-int UartDecoder::getBounce(){
+enum Bounce UartDecoder::getBounce(){
     UartDecoder& decoder= *this;
-    return decoder.curr_bounce;
+    return static_cast<Bounce>(decoder.curr_bounce);
 }
 
-int UartDecoder::getButton(){
+enum Button UartDecoder::getButton(){
     UartDecoder& decoder = *this;
-    return decoder.curr_press;
+    return static_cast<Button>(decoder.curr_press);
 }
 
 int UartDecoder::readSerial(){

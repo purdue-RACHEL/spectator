@@ -10,8 +10,7 @@
 #define ERROR_SHIFT 7
 
 // LINUX TTY ASSOCIATED WITH SERIAL DEVICE
-#define DEVICE "/dev/ttyUSB0"
-#include <string.h>
+#include <string>
 enum Button{
     NOPRESS = -1,
     ZERO,
@@ -45,8 +44,8 @@ class UartDecoder{
 
 UartDecoder(std::string&);
 int decode(unsigned char message);
-int getButton();
-int getBounce();
+enum Button getButton();
+enum Bounce getBounce();
 int readSerial();
 void closePort();
 };

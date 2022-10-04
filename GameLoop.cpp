@@ -2,9 +2,9 @@
 #include "GameLoop.hpp"
 #include <thread>
 #include "UartDecoder.hpp"
+#include <string>
 
-using namespace std;
-using clock_type = std::chrono:high_resolution_clock;
+using clock_type = std::chrono::high_resolution_clock;
 
 int main(int argc, char ** argv){
 
@@ -32,7 +32,13 @@ int main(int argc, char ** argv){
                       from this thread does not yet have a laid out
                       representation.
     */
-
+    // I think multiple threads could be a bit overkill here. Specifically because all
+    // these events, (conduct game logic, display to projector, read from camera, etc.)
+    // should happen in the same sequence each loop of the game, and we would probably
+    // just end up locking every thread while one is running. Also managing shared 
+    // variables between threads can be a headache. I commented it out for now
+    // just to make testing simpler.
+    /*
     std::thread mainThread(mainLoop);
     std::thread projectorThread(projectorLoop);
     std::thread cameraThread(cameraLoop);
@@ -41,7 +47,8 @@ int main(int argc, char ** argv){
     mainThread.join();
     projectorThread.join();
     cameraThread.join();
-
+    */
+	mainLoop();			
     return -1;
 }
 
@@ -59,15 +66,15 @@ int mainLoop()
 
     Button button = NOPRESS;
 
-    string deviceStr = "/dev/ttyUSB0";
+    std::string deviceStr = "/dev/ttyUSB0";
 	UartDecoder uart = UartDecoder(deviceStr);
 
     auto start = clock_type::now();
-    auto target = start + 30ms;
+    auto target = start + std::chrono::milliseconds(30);
 
     for(;;) {
-        std::this_thread::sleep_until(target):
-        target += 30ms;
+        std::this_thread::sleep_until(target);
+        target += std::chrono::milliseconds(30);
 
         uart.readSerial();
 
