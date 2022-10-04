@@ -7,14 +7,15 @@
 #define BOUNCE_MASK 0x60
 #define BOUNCE_SHIFT 5
 #define ERROR_MASK 0x80
-#define ERROR_SHIT 7
+#define ERROR_SHIFT 7
 
 // LINUX TTY ASSOCIATED WITH SERIAL DEVICE
 #define DEVICE "/dev/ttyUSB0"
 #include <string.h>
 enum Button{
     NOPRESS = -1,
-    ONE = 1,
+    ZERO,
+    ONE,
     TWO,
     THREE,
     FOUR,
@@ -33,8 +34,8 @@ enum Button{
 
 enum Bounce{
     NOBOUNCE = -1,
-    LEFT=1,
-    RIGHT,
+    BLUE=1,
+    RED,
 };
 class UartDecoder{
 	public:
