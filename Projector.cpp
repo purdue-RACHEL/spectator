@@ -3,12 +3,28 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 
+#define TEST_PROJECTOR
+#ifdef TEST_PROJECTOR
+#include "UartDecoder.hpp"
+#include <string>
 int main(int argc, char ** argv){
 	Projector proj(100,100);
-	proj.renderSquare(40,40,100,100,255,255,255);
-	proj.redraw();
-	cv::waitKey();
+	std::string uartDeviceStr = "/dev/ttyUSB0";
+	UartDecoder uart(uartDeviceStr);
+	for(;;){
+		uart.readSerial();
+		if(uart.getBounce() == RED){
+			proj.renderSquare(40,40,100,100,255,0,0);
+		}
+		if(uart.getBounce() == BLUE){
+			proj.renderSquare(40,40,100,100,0,0,255);
+		}
+		proj.redraw();
+		cv::waitKey(20);
+	}
 }
+#endif
+
 Projector::Projector(int h, int w){
 	Projector &proj = *this;
         proj.h = h;
