@@ -7,6 +7,7 @@ class Projector{
     public:
         Projector(int h, int w);
         void renderSquare(int x, int y, int w, int h, float r, float g, float b);
+	void redraw();
     private:
         int h,w;
         cv::Mat display;
