@@ -10,7 +10,6 @@
 
 
 using namespace std;
-
 #ifdef TESTDECODER
 // TEST MAIN FOR DEBUGGING
 int main(int argc, char ** argv){

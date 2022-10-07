@@ -8,20 +8,15 @@
 #include "UartDecoder.hpp"
 #include <string>
 int main(int argc, char ** argv){
-	Projector proj(100,100);
+	Projector proj(1080,1920);
 	std::string uartDeviceStr = "/dev/ttyUSB0";
 	UartDecoder uart(uartDeviceStr);
-	for(;;){
-		uart.readSerial();
-		if(uart.getBounce() == RED){
-			proj.renderSquare(40,40,100,100,255,0,0);
-		}
-		if(uart.getBounce() == BLUE){
-			proj.renderSquare(40,40,100,100,0,0,255);
-		}
-		proj.redraw();
-		cv::waitKey(20);
-	}
+	proj.renderSquare(40,40,100,100,255,0,0);
+	std::string text = "Yo Mama";
+	proj.writeText(text,1,10,10,100,100,100);
+	proj.redraw();
+	cv::waitKey();
+
 }
 #endif
 
@@ -32,7 +27,7 @@ Projector::Projector(int h, int w){
         cv::Mat display(h, w, CV_8UC3, cv::Scalar(0, 0, 0));
         proj.display = display;
 }
-void Projector::renderSquare(int x, int y, int w, int h, float r, float g, float b){
+void Projector::renderSquare(int x, int y, int w, int h, int r, int g, int b){
 	Projector &proj = *this;
 	if((y<0) || (x<0)){
 		return;
@@ -62,5 +57,12 @@ void Projector::renderSquare(int x, int y, int w, int h, float r, float g, float
 }
 void Projector::redraw(){
 	Projector &proj = *this;
+	cv::namedWindow("Projector", cv::WND_PROP_FULLSCREEN);
+	cv::setWindowProperty("Projector", cv::WND_PROP_FULLSCREEN, cv::WINDOW_NORMAL);	
 	cv::imshow("Projector", proj.display);
+}
+void Projector::writeText(std::string& text, float  size, int x, int y, int r, int g, int b){
+	Projector &proj = *this;
+	cv::putText(proj.display, text, cv::Point(x,y),
+			cv::FONT_HERSHEY_COMPLEX_SMALL, size, cv::Scalar(r,g,b), 1, CV_8UC3);
 }
