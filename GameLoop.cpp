@@ -16,6 +16,8 @@ int gameLoop()
     uint8_t score_red = 0;
     uint8_t score_blue = 0;
 
+    GameStatus gameStatus = ACTIVE;
+
     // TODO: location variables - multithreaded
 
     std::string deviceStr = "/dev/ttyUSB0";
@@ -26,7 +28,7 @@ int gameLoop()
     auto target = start + std::chrono::milliseconds(30);
     auto timeout = invalid_timeout;
 
-    for(;;) {
+    while(gameStatus == ACTIVE) {
         std::this_thread::sleep_until(target);
         target += std::chrono::milliseconds(30);
 
@@ -80,16 +82,44 @@ int gameLoop()
             }
         }
 
+        /********************
+         * Button Logic
+         *******************/
+
         if(button != NOPRESS) {
             // TODO: what should each button do?
+            // We should refactor the Button enum to refer to the specific actions
+
+            switch(button) {
+                case ONE:
+                    score_red += 1;
+                    break;
+                case FOUR:
+                    score_red -= 1;
+                    break;
+                
+                case A:
+                    score_blue += 1;
+                    break;
+                case B:
+                    score_blue -= 1;
+                    break;
+
+                case D:
+                    gameStatus = SHUTDOWN;
+                    break;
+
+            }
+
+            // 1. increase red score
+            // 4. decrease red score
+            // a. increase blue score
+            // b. decrease blue score
+
+            // d. exit game (require second press - confirmation TODO: mem logic)
 
             // numbering here is not tied to button numbers, just a counter
-            // 1. increase red score
-            // 2. decrease red score
-            // 3. increase blue score
-            // 4. decrease blue score
             // 5. reset screen (for gamemodes or sm)
-            // 6. exit game (requires confirmation - second press)
             // sensitivity change buttons?
             // tell which side to serve?
             // ...
