@@ -2,7 +2,7 @@
 #define INCLUDE_GAME_LOOP
 #include "UartDecoder.hpp"
 
-#define BOUNCE_TIMEOUT_MS 1000
+#define BOUNCE_TIMEOUT_MS 3000
 
 enum GameStatus {
     ACTIVE,

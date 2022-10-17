@@ -35,11 +35,10 @@ int main()
         bounce = uart.getBounce();
         button = uart.getButton();
 
-        handleBounce(bounce);
-
-
-	std::cout << "red score: " << score_red << std::endl;
-	std::cout << "blue score: " << score_blue << std::endl;
+        if(handleBounce(bounce)) {
+            std::cout << "red score: " << score_red << std::endl;
+	        std::cout << "blue score: " << score_blue << std::endl;
+        }
 
         /********************
          * Button Logic
@@ -52,16 +51,24 @@ int main()
             switch(button) {
                 case ONE:
                     score_red += 1;
+                    std::cout << "red score: " << score_red << std::endl;
+	                std::cout << "blue score: " << score_blue << std::endl;
                     break;
                 case FOUR:
                     score_red -= 1;
+                    std::cout << "red score: " << score_red << std::endl;
+	                std::cout << "blue score: " << score_blue << std::endl;
                     break;
                 
                 case A:
                     score_blue += 1;
+                    std::cout << "red score: " << score_red << std::endl;
+	                std::cout << "blue score: " << score_blue << std::endl;
                     break;
                 case B:
                     score_blue -= 1;
+                    std::cout << "red score: " << score_red << std::endl;
+	                std::cout << "blue score: " << score_blue << std::endl;
                     break;
 
                 case D:
@@ -91,12 +98,15 @@ int main()
         // TODO: game finish logic - wins, ... mostly to be handled in projecting
     }
 
+    uart.writeSerial(FORCE_SHUTDOWN);
     uart.closePort();
 
     return -1;
 }
 
 int handleBounce(Bounce bounce) {
+
+    int change = 0;
 
     static Bounce previous_bounce = NOBOUNCE;
     static auto timeout = clock_type::now();
@@ -114,10 +124,13 @@ int handleBounce(Bounce bounce) {
 
             // award points
             if(previous_bounce == bounce) {
-                if(bounce == RED)
+                if(bounce == RED) {
                     score_blue += 1;
-                else
+                    change = 1;
+                } else {
                     score_red += 1;
+                    change = 1;
+                }
 
                 previous_bounce = NOBOUNCE;
                 // test:
@@ -135,13 +148,16 @@ int handleBounce(Bounce bounce) {
     if(timeout != invalid_timeout) {
         // bounce timed out
         if(clock_type::now() + std::chrono::milliseconds(0) > timeout) {
-            if(previous_bounce == RED)
+            if(previous_bounce == RED) {
                 score_blue += 1;
-            else if(previous_bounce == BLUE)
+                change = 1;
+            } else if(previous_bounce == BLUE) {
                 score_red += 1;
+                change = 1;
+            }
             timeout = invalid_timeout;
         }
     }
 
-    return 0;
+    return change;
 }

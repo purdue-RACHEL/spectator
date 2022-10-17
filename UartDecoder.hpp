@@ -31,6 +31,12 @@ enum Button{
     F,
 };
 
+enum Command{
+    REQUEST_DATA = 1,
+    FORCE_RESET,
+    FORCE_SHUTDOWN,
+};
+
 enum Bounce{
     NOBOUNCE = -1,
     BLUE=1,
@@ -47,6 +53,7 @@ int decode(unsigned char message);
 enum Button getButton();
 enum Bounce getBounce();
 int readSerial();
+void writeSerial(char send_buf);
 void closePort();
 };
 #endif
