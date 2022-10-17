@@ -341,6 +341,7 @@ int main(int argc, char** argv) {
 
 	cv::Mat imgray, im_gauss, im_thresh, im_hierarchy;
 	for (;;) {
+		/*
 		cv::Mat eightbit = cam.readDepth();
 		cv::Mat equalized, eq_color, bgr565, sixteenbit, colorized_16bit_palette, slice;
 		sixteenbit = cam.readDepth16U();
@@ -373,6 +374,13 @@ int main(int argc, char** argv) {
 		//imshow("keypoints", im_gauss);
 		//waitKey();
 		cv::waitKey(25);
+		*/
+
+		cv::Mat color = cam.readColor();
+		cv::Mat dst = cv::Mat(768, 1024)
+		cv::resize(color, dst, size);
+		cv::imshow("image", dst);
+		cv::waitKey(33);
 	}
 	printf("No errors!\n");
 	return EXIT_SUCCESS;
