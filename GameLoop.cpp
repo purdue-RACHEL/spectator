@@ -22,7 +22,9 @@ int gameLoop()
 	UartDecoder uart = UartDecoder(deviceStr);
 
     auto start = clock_type::now();
+    auto invalid_timeout = start;
     auto target = start + std::chrono::milliseconds(30);
+    auto timeout = invalid_timeout;
 
     for(;;) {
         std::this_thread::sleep_until(target);
@@ -30,16 +32,23 @@ int gameLoop()
 
         uart.readSerial();
 
-        // TODO: game processing
-        // if(!uart.receivedError())
         bounce = uart.getBounce();
         button = uart.getButton();
 
+        /********************
+         * Bounce Logic
+         *******************/
+
         if(bounce != NOBOUNCE) {
-            // start condition
-            if(previous_bounce == NOBOUNCE)
+
+            // serve condition
+            if(previous_bounce == NOBOUNCE) {
+                // TODO: any necessary serve logic
                 previous_bounce = bounce;
-            else {
+                // test:
+                timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
+            } else {
+
                 // award points
                 if(previous_bounce == bounce) {
                     if(bounce == RED)
@@ -48,10 +57,26 @@ int gameLoop()
                         score_red += 1;
 
                     previous_bounce = NOBOUNCE;
+                    // test:
+                    timeout = start;
                         
+                // game continuation
                 } else {
                     previous_bounce = bounce;
+                    // test:
+                    timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
                 }
+            }
+        }
+
+        if(timeout != invalid_timeout) {
+            // bounce timed out
+            if(clock_type::now() + std::chrono::milliseconds(0) > timeout) {
+                if(previous_bounce == RED)
+                    score_blue += 1;
+                else
+                    score_red += 1;
+                timeout = invalid_timeout;
             }
         }
 
@@ -72,6 +97,8 @@ int gameLoop()
 
         // else - error handling
     }
+
+    uart.closePort();
 
     return -1;
 }
