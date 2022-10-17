@@ -8,7 +8,6 @@
 #include <iostream>
 #include "UartDecoder.hpp"
 
-
 using namespace std;
 #ifdef TESTDECODER
 // TEST MAIN FOR DEBUGGING

@@ -1,15 +1,16 @@
 #include <chrono>
 #include "GameLoop.hpp"
+#include <iostream>
 #include <string>
 #include <thread>
 #include "UartDecoder.hpp"
 
 using clock_type = std::chrono::high_resolution_clock;
 
-uint8_t score_red = 0;
-uint8_t score_blue = 0;
+size_t score_red = 0;
+size_t score_blue = 0;
 
-int gameLoop()
+int main()
 {
     Bounce bounce = NOBOUNCE;
 
@@ -27,7 +28,7 @@ int gameLoop()
 
     while(gameStatus == ACTIVE) {
         std::this_thread::sleep_until(target);
-        target += std::chrono::milliseconds(30);
+        target += std::chrono::milliseconds(200);
 
         uart.readSerial();
 
@@ -35,6 +36,10 @@ int gameLoop()
         button = uart.getButton();
 
         handleBounce(bounce);
+
+
+	std::cout << "red score: " << score_red << std::endl;
+	std::cout << "blue score: " << score_blue << std::endl;
 
         /********************
          * Button Logic
@@ -132,9 +137,11 @@ int handleBounce(Bounce bounce) {
         if(clock_type::now() + std::chrono::milliseconds(0) > timeout) {
             if(previous_bounce == RED)
                 score_blue += 1;
-            else
+            else if(previous_bounce == BLUE)
                 score_red += 1;
             timeout = invalid_timeout;
         }
     }
+
+    return 0;
 }
