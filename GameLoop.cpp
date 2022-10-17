@@ -6,15 +6,14 @@
 
 using clock_type = std::chrono::high_resolution_clock;
 
+uint8_t score_red = 0;
+uint8_t score_blue = 0;
+
 int gameLoop()
 {
     Bounce bounce = NOBOUNCE;
-    Bounce previous_bounce = NOBOUNCE;
 
     Button button = NOPRESS;
-
-    uint8_t score_red = 0;
-    uint8_t score_blue = 0;
 
     GameStatus gameStatus = ACTIVE;
 
@@ -24,9 +23,7 @@ int gameLoop()
 	UartDecoder uart = UartDecoder(deviceStr);
 
     auto start = clock_type::now();
-    auto invalid_timeout = start;
     auto target = start + std::chrono::milliseconds(30);
-    auto timeout = invalid_timeout;
 
     while(gameStatus == ACTIVE) {
         std::this_thread::sleep_until(target);
@@ -37,50 +34,7 @@ int gameLoop()
         bounce = uart.getBounce();
         button = uart.getButton();
 
-        /********************
-         * Bounce Logic
-         *******************/
-
-        if(bounce != NOBOUNCE) {
-
-            // serve condition
-            if(previous_bounce == NOBOUNCE) {
-                // TODO: any necessary serve logic
-                previous_bounce = bounce;
-                // test:
-                timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
-            } else {
-
-                // award points
-                if(previous_bounce == bounce) {
-                    if(bounce == RED)
-                        score_blue += 1;
-                    else
-                        score_red += 1;
-
-                    previous_bounce = NOBOUNCE;
-                    // test:
-                    timeout = start;
-                        
-                // game continuation
-                } else {
-                    previous_bounce = bounce;
-                    // test:
-                    timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
-                }
-            }
-        }
-
-        if(timeout != invalid_timeout) {
-            // bounce timed out
-            if(clock_type::now() + std::chrono::milliseconds(0) > timeout) {
-                if(previous_bounce == RED)
-                    score_blue += 1;
-                else
-                    score_red += 1;
-                timeout = invalid_timeout;
-            }
-        }
+        handleBounce(bounce);
 
         /********************
          * Button Logic
@@ -126,9 +80,61 @@ int gameLoop()
         }
 
         // else - error handling
+
+        // TODO: projecting
+
+        // TODO: game finish logic - wins, ... mostly to be handled in projecting
     }
 
     uart.closePort();
 
     return -1;
+}
+
+int handleBounce(Bounce bounce) {
+
+    static Bounce previous_bounce = NOBOUNCE;
+    static auto timeout = clock_type::now();
+    static auto invalid_timeout = timeout;
+
+    if(bounce != NOBOUNCE) {
+
+        // serve condition
+        if(previous_bounce == NOBOUNCE) {
+            // TODO: any necessary serve logic
+            previous_bounce = bounce;
+            // test:
+            timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
+        } else {
+
+            // award points
+            if(previous_bounce == bounce) {
+                if(bounce == RED)
+                    score_blue += 1;
+                else
+                    score_red += 1;
+
+                previous_bounce = NOBOUNCE;
+                // test:
+                timeout = invalid_timeout;
+                    
+            // game continuation
+            } else {
+                previous_bounce = bounce;
+                // test:
+                timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
+            }
+        }
+    }
+
+    if(timeout != invalid_timeout) {
+        // bounce timed out
+        if(clock_type::now() + std::chrono::milliseconds(0) > timeout) {
+            if(previous_bounce == RED)
+                score_blue += 1;
+            else
+                score_red += 1;
+            timeout = invalid_timeout;
+        }
+    }
 }
