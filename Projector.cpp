@@ -66,3 +66,17 @@ void Projector::writeText(std::string& text, float  size, int x, int y, int r, i
 	cv::putText(proj.display, text, cv::Point(x,y),
 			cv::FONT_HERSHEY_COMPLEX_SMALL, size, cv::Scalar(r,g,b), 1, CV_8UC3);
 }
+void Projector::updateScore(int scoreRed, int scoreBlue){
+	Projector &proj = *this;
+	cv::Mat rotImage = Mat::zeros(proj.display.rows, proj.display.cols, proj.display.type());
+    putText(rotImage, "RotateText", cv::Point(0, proj.display.cols/2), cv::FONT_HERSHEY_COMPLEX_SMALL, 5.0,cv::Scalar(255,255,255),1);
+    putRotateText(rotImage, 90, rotImage);	
+	proj.display+= rotImage;
+}
+void Projector::putRotateText(cv::Mat& src, double angle, cv::Mat& dst)
+{
+    int _len = std::max(src.cols, src.rows);
+    cv::Point2f pt(_len/2., _len/2.);
+    cv::Mat r = cv::getRotationMatrix2D(pt, angle, 1.0);
+    cv::warpAffine(src, dst, r, cv::Size(_len, _len));
+}
