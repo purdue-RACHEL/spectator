@@ -1,7 +1,7 @@
+#include <thread>
+
 #include "CameraLoop.hpp"
 #include "GameLoop.hpp"
-
-#include <thread>
 
 int main(int argc, char ** argv){
 

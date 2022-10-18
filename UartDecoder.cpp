@@ -1,11 +1,12 @@
+#include <cstring>
+#include <errno.h>
+#include <fcntl.h>
+#include <iostream>
 #include <stdio.h>
 #include <string>
-#include <cstring>
-#include <fcntl.h>
-#include <errno.h>
 #include <termios.h>
 #include <unistd.h>
-#include <iostream>
+
 #include "UartDecoder.hpp"
 
 using namespace std;
