@@ -10,6 +10,7 @@
 #define DEBUG_DRAW
 
 #include "blobDetector.h"
+#include "CameraInterface.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -133,208 +134,11 @@ void generate16BitPalette(std::vector<struct PixelBGR>& palette) {
 	}
 }
 
-class CameraInterface {
-	public:
-		CameraInterface(openni::Device& device, openni::VideoStream& depth, openni::VideoStream& color);
-		~CameraInterface();
-
-		cv::Mat readDepth();
-		
-		cv::Mat readDepthSlice(uint16_t start);
-		cv::Mat readDepth16U();
-		cv::Mat readDepthBGR565();
-		cv::Mat readColor();
-		void drawRLOF();
-
-		openni::VideoFrameRef		m_depthFrame;
-		openni::VideoFrameRef		m_colorFrame;
-		openni::VideoMode		m_depthVideoMode;
-		openni::VideoMode		m_colorVideoMode;
-		
-		openni::Device&			m_device;
-		openni::VideoStream&		m_depthStream;
-		openni::VideoStream&		m_colorStream;
-		openni::VideoStream**		m_streams;
-	private:
-};
-
-CameraInterface::CameraInterface(openni::Device& device, openni::VideoStream& depth, openni::VideoStream& color) : 
-	m_device(device),
-	m_depthStream(depth),
-	m_colorStream(color),
-	m_depthFrame(openni::VideoFrameRef()),
-	m_colorFrame(openni::VideoFrameRef()),
-	m_depthVideoMode(depth.getVideoMode()),
-	m_colorVideoMode(color.getVideoMode())
-{
-}
-
-CameraInterface::~CameraInterface() {
-}
-
-cv::Mat CameraInterface::readDepth() {
-	m_depthStream.readFrame(&m_depthFrame);
-	size_t width = m_depthFrame.getWidth();
-	size_t height = m_depthFrame.getHeight();
-	size_t depthSize = width * height;
-	cv::Mat depthMat = cv::Mat(m_depthFrame.getHeight(), m_depthFrame.getWidth(), CV_16UC1, (void *) m_depthFrame.getData());
-	depthMat = depthMat.clone();
-	cv::Mat outMat(height, width, CV_8UC1);
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			outMat.at<uint8_t>(y, width - x) = (depthMat.at<uint16_t>(y, x) & 0xff00) >> 8;
-		}
-	}
-	return outMat;
-}
-
-cv::Mat CameraInterface::readDepthSlice(uint16_t start) {
-	m_depthStream.readFrame(&m_depthFrame);
-	size_t width = m_depthFrame.getWidth();
-	size_t height = m_depthFrame.getHeight();
-	size_t depthSize = width * height;
-	cv::Mat depthMat = cv::Mat(m_depthFrame.getHeight(), m_depthFrame.getWidth(), CV_16UC1, (void *) m_depthFrame.getData());
-	depthMat = depthMat.clone();
-	cv::Mat outMat(height, width, CV_8UC1);
-	uint16_t stop = start +120;
-	uint16_t curr;
-	//printf("%d %d", start, stop);
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			curr = depthMat.at<uint16_t>(y, x);
-			//printf("%d\n", curr);
-			if ((curr > stop) || (curr < start)) {
-				outMat.at<uint8_t>(y, width - x) = 0;
-			} else {
-				outMat.at<uint8_t>(y, width - x) = 255 - (depthMat.at<uint16_t>(y, x) - start) & 0xff;
-			}
-		}
-	}
-	return outMat;
-}
-cv::Mat CameraInterface::readDepth16U() {
-	m_depthStream.readFrame(&m_depthFrame);
-	size_t width = m_depthFrame.getWidth();
-	size_t height = m_depthFrame.getHeight();
-	size_t depthSize = width * height;
-	cv::Mat depthMat = cv::Mat(m_depthFrame.getHeight(), m_depthFrame.getWidth(), CV_16UC1, (void *) m_depthFrame.getData());
-	depthMat = depthMat.clone();
-	cv::Mat outMat(height, width, CV_16UC1);
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			outMat.at<uint16_t>(y, width - x) = (depthMat.at<uint16_t>(y, x));
-		}
-	}
-	return outMat;
-}
-
-cv::Mat CameraInterface::readDepthBGR565() {
-	cv::Mat depthMat = readDepth16U();
-	cv::Mat outMat(depthMat.rows, depthMat.cols, CV_8UC3);
-	cv::Mat chans[3];
-	cv::split(outMat, chans);
-	for (int y = 0; y < depthMat.rows; y++) {
-		for (int x = 0; x < depthMat.cols; x++) {
-			uint16_t inMat = depthMat.at<uint16_t>(y, x);
-			chans[0].at<uint8_t>(y, x) = ((inMat >> 8) && 0xFF);
-			chans[1].at<uint8_t>(y, x) = ((inMat >> 4) && 0xFF);
-			chans[2].at<uint8_t>(y, x) = ((inMat >> 0) && 0xFF);
-		}
-	}
-	cv::merge(chans, 3, outMat);
-	return outMat;
-}
-
-
-cv::Mat CameraInterface::readColor() {
-	m_colorStream.readFrame(&m_colorFrame);
-	size_t colorByteSize = 3 * m_colorFrame.getWidth() * m_colorFrame.getHeight();
-	cv::Mat colorMat = cv::Mat(m_colorFrame.getHeight(), m_colorFrame.getWidth(), CV_8UC3, (void *) m_colorFrame.getData());
-	colorMat = colorMat.clone();
-	return colorMat;
-}
-
-/*
-void CameraInterface::drawRLOF() {
-	cv::Mat frame_now, frame_past, outImage, flowMap;
-	std::vector<cv::Point> feat_now, feat_past;
-
-	frame_past = cv::cvtColor(readDepth(), 
-	frame_now = readDepth();
-
-	cv::goodFeaturesToTrack ();
-
-	while (1) {
-		
-	}
-}
-*/
-
-int main(int argc, char** argv) {
-#ifdef DEBUG
-	printf("Entry point.\n");
-#endif /* DEBUG */
-
-	openni::Status rc = openni::STATUS_OK;
-	rc = openni::OpenNI::initialize();
-#ifdef DEBUG
-	printf("After initialization:\n");
-#endif /* DEBUG */
-	if (rc != openni::STATUS_OK) {
-		printf("Couldn't initialize.\n%s\n", openni::OpenNI::getExtendedError());
-		return EXIT_FAILURE;
-	}
-	
-	openni::Device device;
-	
-	rc = device.open(openni::ANY_DEVICE);
-	if (rc != openni::STATUS_OK) {
-		printf("failed to open device\n");
-		return rc;
-	}
-#ifdef DEBUG
-	printf("After device opened:\n");
-#endif /* DEBUG */
-
-	openni::VideoStream depth, color;
-	rc = depth.create(device, openni::SENSOR_DEPTH);
-	if (rc != openni::STATUS_OK) {
-		printf("Couldn't find depth stream\n");
-		return rc;
-	} else {
-		rc = depth.start();
-		if (rc != openni::STATUS_OK) {
-			printf("Couldn't start depth stream\n");
-			depth.destroy();
-			return rc;
-		}
-	}
-#ifdef DEBUG
-	printf("Depth stream started\n");
-#endif /* DEBUG */
-
-	rc = color.create(device, openni::SENSOR_COLOR);
-	if (rc != openni::STATUS_OK) {
-		printf("Couldn't find color stream\n");
-		return rc;
-	} else {
-		rc = color.start();
-		if (rc != openni::STATUS_OK) {
-			printf("Couldn't start depth stream\n");
-			color.destroy();
-			return rc;
-		}
-	}
-#ifdef DEBUG
-	printf("Color stream started\n");
-#endif /* DEBUG */
-
-	CameraInterface cam = CameraInterface(device, depth, color);
+int main(void) {
+	CameraInterface cam = CameraInterface::autoCameraInterface();
 #ifdef DEBUG
 	printf("viewer object created\n");
 #endif /* DEBUG */
-
-	//cam.drawRLOF(thisFrame, lastFrame); //doesn't return
 	
 	std::vector<struct PixelBGR> palette;
 	generate16BitPalette(palette);
@@ -377,9 +181,7 @@ int main(int argc, char** argv) {
 		*/
 
 		cv::Mat color = cam.readColor();
-		cv::Mat dst = cv::Mat(768, 1024)
-		cv::resize(color, dst, size);
-		cv::imshow("image", dst);
+		cv::imshow("image", color);
 		cv::waitKey(33);
 	}
 	printf("No errors!\n");
