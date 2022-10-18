@@ -1,13 +1,13 @@
+#include <cstring>
+#include <errno.h>
+#include <fcntl.h>
+#include <iostream>
 #include <stdio.h>
 #include <string>
-#include <cstring>
-#include <fcntl.h>
-#include <errno.h>
 #include <termios.h>
 #include <unistd.h>
-#include <iostream>
-#include "UartDecoder.hpp"
 
+#include "UartDecoder.hpp"
 
 using namespace std;
 #ifdef TESTDECODER
@@ -109,7 +109,7 @@ enum Button UartDecoder::getButton(){
 
 int UartDecoder::readSerial(){
     UartDecoder& decoder = *this;
-    char send_buf = 0x01;
+    char send_buf = REQUEST_DATA;
     write(decoder.serial_port, &send_buf, sizeof(send_buf));
     char read_buf;
     int n = read(decoder.serial_port, &read_buf, sizeof(read_buf));
@@ -120,6 +120,11 @@ int UartDecoder::readSerial(){
         return 1;
     }
     return 0;
+}
+
+void UartDecoder::writeSerial(char send_buf){
+    UartDecoder& decoder = *this;
+    write(decoder.serial_port, &send_buf, sizeof(send_buf));
 }
 
 void UartDecoder::closePort(){

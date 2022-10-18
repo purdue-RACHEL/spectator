@@ -1,101 +1,72 @@
 #include <chrono>
-#include "GameLoop.hpp"
+#include <iostream>
 #include <string>
 #include <thread>
+
+#include "GameLoop.hpp"
 #include "UartDecoder.hpp"
 
-using clock_type = std::chrono::high_resolution_clock;
+score_t score_red = 0;
+score_t score_blue = 0;
 
-uint8_t score_red = 0;
-uint8_t score_blue = 0;
+GameStatus gameStatus = STARTUP;
 
-int gameLoop()
+int main()
 {
     Bounce bounce = NOBOUNCE;
-
     Button button = NOPRESS;
 
-    GameStatus gameStatus = ACTIVE;
-
-    // TODO: location variables - multithreaded
+    Game_Preferences_t game_preferences;
 
     std::string deviceStr = "/dev/ttyUSB0";
 	UartDecoder uart = UartDecoder(deviceStr);
 
-    auto start = clock_type::now();
-    auto target = start + std::chrono::milliseconds(30);
+    time_t start = std::chrono::high_resolution_clock::now();
+    time_t target = start;
+
+    gameStatus = ACTIVE;
 
     while(gameStatus == ACTIVE) {
+
+        // TODO: protection logic.
+        // if we happen to take 35 ms to process, there is no point for the sleep
+        // perhaps we skip the sleep
         std::this_thread::sleep_until(target);
-        target += std::chrono::milliseconds(30);
+        target += std::chrono::milliseconds(UART_POLL_MS);
 
         uart.readSerial();
 
         bounce = uart.getBounce();
         button = uart.getButton();
 
-        handleBounce(bounce);
+        // TODO: keep in mind, we may have short circuiting here......
+        if((handleBounce(bounce) == SCORE_CHANGE) || (handleButton(button) == SCORE_CHANGE)) {
+            // debug
+            std::cout << "red score: " << score_red << std::endl;
+	        std::cout << "blue score: " << score_blue << std::endl;
 
-        /********************
-         * Button Logic
-         *******************/
-
-        if(button != NOPRESS) {
-            // TODO: what should each button do?
-            // We should refactor the Button enum to refer to the specific actions
-
-            switch(button) {
-                case ONE:
-                    score_red += 1;
-                    break;
-                case FOUR:
-                    score_red -= 1;
-                    break;
-                
-                case A:
-                    score_blue += 1;
-                    break;
-                case B:
-                    score_blue -= 1;
-                    break;
-
-                case D:
-                    gameStatus = SHUTDOWN;
-                    break;
-
-            }
-
-            // 1. increase red score
-            // 4. decrease red score
-            // a. increase blue score
-            // b. decrease blue score
-
-            // d. exit game (require second press - confirmation TODO: mem logic)
-
-            // numbering here is not tied to button numbers, just a counter
-            // 5. reset screen (for gamemodes or sm)
-            // sensitivity change buttons?
-            // tell which side to serve?
-            // ...
+            // TODO: project updates
         }
 
-        // else - error handling
-
-        // TODO: projecting
-
         // TODO: game finish logic - wins, ... mostly to be handled in projecting
+        if(score_red > game_preferences.max_score || score_blue > game_preferences.max_score) {
+        }
     }
 
+    // shutdown sequence
+    uart.writeSerial(FORCE_SHUTDOWN);
     uart.closePort();
 
     return -1;
 }
 
-int handleBounce(Bounce bounce) {
+StatusChange handleBounce(Bounce bounce) {
+
+    StatusChange statusChange = NO_CHANGE;
 
     static Bounce previous_bounce = NOBOUNCE;
-    static auto timeout = clock_type::now();
-    static auto invalid_timeout = timeout;
+    static time_t timeout = std::chrono::high_resolution_clock::now();
+    static time_t invalid_timeout = timeout;
 
     if(bounce != NOBOUNCE) {
 
@@ -103,38 +74,125 @@ int handleBounce(Bounce bounce) {
         if(previous_bounce == NOBOUNCE) {
             // TODO: any necessary serve logic
             previous_bounce = bounce;
-            // test:
-            timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
+            timeout = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
         } else {
 
             // award points
             if(previous_bounce == bounce) {
-                if(bounce == RED)
-                    score_blue += 1;
-                else
-                    score_red += 1;
+                if(bounce == RED) {
+                    if(score_blue != SCORE_MAX) {
+                        score_blue += 1;
+                        statusChange = SCORE_CHANGE;
+                    } else {
+                        statusChange = FAILED_SCORE_CHANGE;
+                    }
+                } else {
+                    if(score_red != SCORE_MAX) {
+                        score_red += 1;
+                        statusChange = SCORE_CHANGE;
+                    } else {
+                        statusChange = FAILED_SCORE_CHANGE;
+                    }
+                }
 
                 previous_bounce = NOBOUNCE;
-                // test:
                 timeout = invalid_timeout;
                     
             // game continuation
             } else {
                 previous_bounce = bounce;
-                // test:
-                timeout = clock_type::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
+                timeout = std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(BOUNCE_TIMEOUT_MS);
             }
         }
     }
 
     if(timeout != invalid_timeout) {
         // bounce timed out
-        if(clock_type::now() + std::chrono::milliseconds(0) > timeout) {
-            if(previous_bounce == RED)
-                score_blue += 1;
-            else
-                score_red += 1;
+        if(std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(0) > timeout) {
+            if(previous_bounce == RED) {
+                if(score_blue != SCORE_MAX) {
+                    score_blue += 1;
+                    statusChange = SCORE_CHANGE;
+                } else {
+                    statusChange = FAILED_SCORE_CHANGE;
+                }
+            } else if(previous_bounce == BLUE) {
+                if(score_red != SCORE_MAX) {
+                    score_red += 1;
+                    statusChange = SCORE_CHANGE;
+                } else {
+                    statusChange = FAILED_SCORE_CHANGE;
+                }
+            }
+
             timeout = invalid_timeout;
         }
     }
+
+    return statusChange;
+}
+
+StatusChange handleButton(Button button) {
+
+    StatusChange statusChange = NO_CHANGE;
+
+    static Button previous_button = NOPRESS;
+
+    if(button == NOPRESS)
+        return statusChange;
+
+    // TODO: what should each button do?
+    // We should refactor the Button enum to refer to the specific actions
+
+    switch(button) {
+        case ONE:
+            if(score_red != SCORE_MAX) {
+                score_red += 1;
+                statusChange = SCORE_CHANGE;
+            } else {
+                statusChange = FAILED_SCORE_CHANGE;
+            }
+            break;
+        case FOUR:
+            if(score_red > 0) {
+                score_red -= 1;
+                statusChange = SCORE_CHANGE;
+            } else {
+                statusChange = FAILED_SCORE_CHANGE;
+            }
+            break;
+        
+        case A:
+            if(score_blue != SCORE_MAX) {
+                score_blue += 1;
+                statusChange = SCORE_CHANGE;
+            } else {
+                statusChange = FAILED_SCORE_CHANGE;
+            }
+            break;
+        case B:
+            if(score_blue > 0) {
+                score_blue -= 1;
+                statusChange = SCORE_CHANGE;
+            } else {
+                statusChange = FAILED_SCORE_CHANGE;
+            }
+            break;
+
+        case D:
+            if(previous_button == D)
+                gameStatus = SHUTDOWN;
+                statusChange = SHUTDOWN_CHANGE;
+            break;
+    }
+
+    previous_button = button;
+
+    // numbering here is not tied to button numbers, just a counter
+    // 5. reset screen (for gamemodes or sm)
+    // sensitivity change buttons?
+    // tell which side to serve?
+    // ...
+
+    return statusChange;
 }
