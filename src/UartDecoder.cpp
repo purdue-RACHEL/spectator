@@ -10,8 +10,7 @@
 #include "UartDecoder.hpp"
 
 using namespace std;
-#define TESTDECODER
-#ifdef TESTDECODER
+#ifdef TESTUART
 // TEST MAIN FOR DEBUGGING
 int main(int argc, char ** argv){
 	string deviceStr = "/dev/ttyUSB0";

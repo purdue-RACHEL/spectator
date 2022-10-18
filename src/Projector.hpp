@@ -10,7 +10,7 @@ class Projector{
 	    void redraw();
 	    void writeText(std::string &text, float size, int x, int y, int r, int g, int b);
         void updateScore(int, int);
-        void putRotateText(cv::Mat& src, double angle, cv::Mat& dst)
+//        void putRotateText(cv::Mat& src, double angle, cv::Mat& dst)
     private:
         int h,w;
         cv::Mat display;

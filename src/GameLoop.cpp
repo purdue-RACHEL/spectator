@@ -11,6 +11,7 @@ score_t score_blue = 0;
 
 GameStatus gameStatus = STARTUP;
 
+#ifdef TESTGAMELOOP
 int main()
 {
     Bounce bounce = NOBOUNCE;
@@ -59,6 +60,7 @@ int main()
 
     return -1;
 }
+#endif
 
 StatusChange handleBounce(Bounce bounce) {
 

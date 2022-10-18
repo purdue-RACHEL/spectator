@@ -3,8 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 
-#define TEST_PROJECTOR
-#ifdef TEST_PROJECTOR
+#ifdef TESTPROJECTOR
 #include "UartDecoder.hpp"
 #include <string>
 int main(int argc, char ** argv){
@@ -12,8 +11,8 @@ int main(int argc, char ** argv){
 	std::string uartDeviceStr = "/dev/ttyUSB0";
 	UartDecoder uart(uartDeviceStr);
 	proj.renderSquare(40,40,100,100,255,0,0);
-	std::string text = "Yo Mama";
-	proj.writeText(text,1,10,10,100,100,100);
+	std::string text = "Big balls";
+	proj.writeText(text,10,400,400,100,100,100);
 	proj.redraw();
 	cv::waitKey();
 
@@ -64,8 +63,9 @@ void Projector::redraw(){
 void Projector::writeText(std::string& text, float  size, int x, int y, int r, int g, int b){
 	Projector &proj = *this;
 	cv::putText(proj.display, text, cv::Point(x,y),
-			cv::FONT_HERSHEY_COMPLEX_SMALL, size, cv::Scalar(r,g,b), 1, CV_8UC3);
+			cv::FONT_HERSHEY_SIMPLEX, size, cv::Scalar(r,g,b), 20, CV_8UC3);
 }
+/*
 void Projector::updateScore(int scoreRed, int scoreBlue){
 	Projector &proj = *this;
 	cv::Mat rotImage = Mat::zeros(proj.display.rows, proj.display.cols, proj.display.type());
@@ -79,4 +79,6 @@ void Projector::putRotateText(cv::Mat& src, double angle, cv::Mat& dst)
     cv::Point2f pt(_len/2., _len/2.);
     cv::Mat r = cv::getRotationMatrix2D(pt, angle, 1.0);
     cv::warpAffine(src, dst, r, cv::Size(_len, _len));
+
 }
+*/
