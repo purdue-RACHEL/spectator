@@ -10,6 +10,8 @@ score_t score_red = 0;
 score_t score_blue = 0;
 
 GameStatus gameStatus = STARTUP;
+Game_Preferences_t game_preferences;
+
 
 #ifdef TESTGAMELOOP
 int main()
@@ -17,13 +19,11 @@ int main()
     Bounce bounce = NOBOUNCE;
     Button button = NOPRESS;
 
-    Game_Preferences_t game_preferences;
-
     std::string deviceStr = "/dev/ttyUSB0";
 	UartDecoder uart = UartDecoder(deviceStr);
 
-    time_t start = std::chrono::high_resolution_clock::now();
-    time_t target = start;
+    auto start = std::chrono::high_resolution_clock::now();
+    auto target = start;
 
     gameStatus = ACTIVE;
 
@@ -50,7 +50,8 @@ int main()
         }
 
         // TODO: game finish logic - wins, ... mostly to be handled in projecting
-        if(score_red > game_preferences.max_score || score_blue > game_preferences.max_score) {
+        if(score_red >= game_preferences.max_score || score_blue >= game_preferences.max_score) {
+	    std::cout << "Game Over message" << std::endl;
         }
     }
 
@@ -67,8 +68,8 @@ StatusChange handleBounce(Bounce bounce) {
     StatusChange statusChange = NO_CHANGE;
 
     static Bounce previous_bounce = NOBOUNCE;
-    static time_t timeout = std::chrono::high_resolution_clock::now();
-    static time_t invalid_timeout = timeout;
+    static auto timeout = std::chrono::high_resolution_clock::now();
+    static auto invalid_timeout = timeout;
 
     if(bounce != NOBOUNCE) {
 
@@ -180,6 +181,17 @@ StatusChange handleButton(Button button) {
                 statusChange = FAILED_SCORE_CHANGE;
             }
             break;
+
+	case TWO:
+	    if(game_preferences.max_score > 0)
+		game_preferences.max_score -= 1;
+	    break;
+
+	case THREE:
+	    if(game_preferences.max_score < SCORE_MAX)
+		game_preferences.max_score += 1;
+	    break;
+	    // TODO: ^ add gameStatus change n check protection types
 
         case D:
             if(previous_button == D)

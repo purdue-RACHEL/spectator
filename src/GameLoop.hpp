@@ -11,7 +11,7 @@
 
 // Type Declarations
 typedef uint32_t score_t;
-typedef std::chrono::steady_clock::time_point time_t;
+//typedef std::chrono::steady_clock::time_point time_t;
 
 // Struct Declarations
 typedef struct Game_Preferences_t {
