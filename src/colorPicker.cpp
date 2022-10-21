@@ -7,11 +7,11 @@ using namespace cv;
 int main(int argc, char** argv) {
    CameraInterface cam = CameraInterface();//capturing video from default camera//
    namedWindow("Adjust");//declaring window to show the image//
-   int Hue_Lower_Value = 0;//initial hue value(lower)//
+   int Hue_Lower_Value = 155;//initial hue value(lower)//
    int Hue_Upper_Value = 22;//initial hue value(upper)//
-   int Saturation_Lower_Value = 0;//initial saturation(lower)//
+   int Saturation_Lower_Value = 10;//initial saturation(lower)//
    int Saturation_Upper_Value = 255;//initial saturation(upper)//
-   int Value_Lower = 0;//initial value (lower)//
+   int Value_Lower = 188;//initial value (lower)//
    int Value_Upper = 255;//initial saturation(upper)//
    createTrackbar("Hue_Lower", "Adjust", &Hue_Lower_Value, 179);//track-bar for lower hue//
    createTrackbar("Hue_Upper", "Adjust", &Hue_Upper_Value, 179);//track-bar for lower-upper hue//

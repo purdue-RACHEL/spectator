@@ -11,6 +11,7 @@
 
 #include "blobDetector.h"
 #include "CameraInterface.hpp"
+#include "ColorTracker.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -136,11 +137,17 @@ void generate16BitPalette(std::vector<struct PixelBGR>& palette) {
 
 int main(void) {
 	CameraInterface cam = CameraInterface();
+	ColorTracker colTrack = ColorTracker();
+	cv::Mat in, bin;
+	cv::Scalar lower = cv::Scalar(164, 89, 175);
+	cv::Scalar upper = cv::Scalar(22, 255, 255);
 	
 	for (;;) {
-		cv::Mat color = cam.readColor();
-		cv::imshow("image", color);
-		cv::waitKey(33);
+		in = cam.readColor();
+		bin = colTrack.filterImage(in, 164, 89, 175, 22, 255, 255);
+		cv::imshow("orig", in);
+		cv::imshow("filtered", bin);
+		if (cv::waitKey(33) == 27) break;
 	}
 	printf("No errors!\n");
 	return EXIT_SUCCESS;

@@ -136,50 +136,8 @@ void generate16BitPalette(std::vector<struct PixelBGR>& palette) {
 
 int main(void) {
 	CameraInterface cam = CameraInterface();
-#ifdef DEBUG
-	printf("viewer object created\n");
-#endif /* DEBUG */
 	
-	std::vector<struct PixelBGR> palette;
-	generate16BitPalette(palette);
-
-	cv::Mat imgray, im_gauss, im_thresh, im_hierarchy;
 	for (;;) {
-		/*
-		cv::Mat eightbit = cam.readDepth();
-		cv::Mat equalized, eq_color, bgr565, sixteenbit, colorized_16bit_palette, slice;
-		sixteenbit = cam.readDepth16U();
-		//cv::cvtColor(sixteenbit, bgr565, cv::COLOR_BGR5652BGR, 3);
-		sixteenbit = cam.readDepth16U();
-		colorized_16bit_palette = convert16U2palette(sixteenbit, palette);
-		cv::equalizeHist(eightbit, equalized);
-		cv::applyColorMap(equalized, eq_color, cv::COLORMAP_AUTUMN);
-		//cv::imshow("8bit depth", eightbit);
-		//cv::imshow("equalized", equalized);
-		//cv::imshow("colorized compressed depth", eq_color);
-		//cv::imshow("colorized uncompressed depth", colorized_16bit_palette);
-		//detectBlob(colorized_16bit_palette);
-		slice = cam.readDepthSlice(1945);
-		
-		// DETECTOR CODE	
-		std::vector<std::vector<cv::Point>> contours; 
-		imgray = slice;
-		cv::GaussianBlur(imgray, im_gauss, cv::Size(11,11), 0);
-		cv::imshow("Slice", slice);
-		cv::threshold(im_gauss, im_thresh, 120, 255, cv::THRESH_BINARY);
-		cv::imshow("Threshold", im_thresh);
-		cv::findContours(im_thresh, contours, im_hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
-		cv::Mat black(im_thresh.rows, im_thresh.cols, CV_8UC3, cv::Scalar(0, 0, 0));;
-		cv::drawContours(black, contours, -1, cv::Scalar(255,172,172));
-		cv::imshow("Contours", black);
-		#ifdef DEBUG_BLOB_DETECTOR
-		//cerr << "Key Points Found: " <<keypoints.size() << endl;
-		#endif
-		//imshow("keypoints", im_gauss);
-		//waitKey();
-		cv::waitKey(25);
-		*/
-
 		cv::Mat color = cam.readColor();
 		cv::imshow("image", color);
 		cv::waitKey(33);

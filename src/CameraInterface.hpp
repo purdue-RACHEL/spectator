@@ -4,6 +4,8 @@
  * Header file defining class CameraInterface
  */
 
+#pragma once
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
