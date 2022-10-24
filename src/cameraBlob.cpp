@@ -138,6 +138,8 @@ void generate16BitPalette(std::vector<struct PixelBGR>& palette) {
 int main(void) {
 	CameraInterface cam = CameraInterface();
 	ColorTracker colTrack = ColorTracker();
+    ContourTracker conTrack = ContourTracker();
+    std::vector<std::vector<cv::Point>> contours;
 	cv::Mat in, bin;
 	cv::Scalar lower = cv::Scalar(164, 89, 175);
 	cv::Scalar upper = cv::Scalar(22, 255, 255);
@@ -145,8 +147,11 @@ int main(void) {
 	for (;;) {
 		in = cam.readColor();
 		bin = colTrack.filterImage(in, 164, 89, 175, 22, 255, 255);
+        conTrack.findContours(bin);
+        cons = conTrack.drawContours();
 		cv::imshow("orig", in);
 		cv::imshow("filtered", bin);
+        cv::imshow("contours", cons);
 		if (cv::waitKey(33) == 27) break;
 	}
 	printf("No errors!\n");
