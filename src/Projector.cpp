@@ -1,3 +1,5 @@
+#ifndef DISABLEOPENCV
+
 #include "Projector.hpp"
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -112,3 +114,4 @@ void Projector::writeRotateText(std::string& text, float size, int x, int y, int
 	}	
 
 }
+#endif
