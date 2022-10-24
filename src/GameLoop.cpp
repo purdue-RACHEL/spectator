@@ -5,7 +5,9 @@
 
 #include "GameLoop.hpp"
 #include "UartDecoder.hpp"
+#ifndef DISABLEOPENCV
 #include "Projector.hpp"
+#endif
 
 score_t score_red = 0;
 score_t score_blue = 0;
@@ -22,7 +24,9 @@ int main()
 
     std::string deviceStr = "/dev/ttyUSB0";
 	UartDecoder uart = UartDecoder(deviceStr);
+#ifndef DISABLEOPENCV
 	Projector proj(1920,1080);
+#endif
 
     auto start = std::chrono::high_resolution_clock::now();
     auto target = start;
@@ -49,9 +53,11 @@ int main()
 	        std::cout << "blue score: " << score_blue << std::endl;
 
             // TODO: project updates
+#ifndef DISABLEOPENCV
 	    proj.drawCenterLine();
 	    proj.updateScore(score_red,score_blue);
 	    proj.refresh();
+#endif
         }
 
         // TODO: game finish logic - wins, ... mostly to be handled in projecting
