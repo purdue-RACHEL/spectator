@@ -61,7 +61,7 @@ elif BUILDOPTION == 'Projector':
     env.Program(BUILDDIR+'runme', [BUILDDIR+'Projector.cpp',BUILDDIR+'UartDecoder.cpp'])
 elif BUILDOPTION == 'Camera':
     env.Replace(CPPDEFINES = '')
-    env.Program(BUILDDIR+'runme', [BUILDDIR+'cameraBlob.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'ColorTracker.cpp'])
+    env.Program(BUILDDIR+'runme', [BUILDDIR+'cameraBlob.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'ColorTracker.cpp', BUILDDIR+'ContourTracker.cpp'])
 elif BUILDOPTION == 'ColorPicker':
     env.Replace(CPPDEFINES = '')
     env.Program(BUILDDIR+'runme', [BUILDDIR+'colorPicker.cpp',BUILDDIR+'CameraInterface.cpp'])

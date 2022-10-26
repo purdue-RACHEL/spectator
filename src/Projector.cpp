@@ -114,4 +114,7 @@ void Projector::writeRotateText(std::string& text, float size, int x, int y, int
 	}	
 
 }
+void Projector::renderTiff(std::string& fname, int x, int y){
+	
+}
 #endif

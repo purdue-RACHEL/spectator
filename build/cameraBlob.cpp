@@ -11,6 +11,8 @@
 
 #include "blobDetector.h"
 #include "CameraInterface.hpp"
+#include "ColorTracker.hpp"
+#include "ContourTracker.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -136,11 +138,24 @@ void generate16BitPalette(std::vector<struct PixelBGR>& palette) {
 
 int main(void) {
 	CameraInterface cam = CameraInterface();
+	ColorTracker colTrack = ColorTracker();
+    ContourTracker conTrack = ContourTracker();
+    std::vector<std::vector<cv::Point>> contours;
+	cv::Mat in, bin;
+	cv::Scalar lower = cv::Scalar(164, 89, 175);
+	cv::Scalar upper = cv::Scalar(22, 255, 255);
 	
 	for (;;) {
-		cv::Mat color = cam.readColor();
-		cv::imshow("image", color);
-		cv::waitKey(33);
+		in = cam.readColor();
+		bin = colTrack.filterImage(in, 164, 89, 175, 22, 255, 255);
+        	conTrack.findContours(bin);
+		cv::Point ballCenter = conTrack.findBallCenter();
+		std::cout << ballCenter << std::endl;
+		cv::Mat cons = conTrack.drawContours(in.rows, in.cols);
+		cv::imshow("orig", in);
+		cv::imshow("filtered", bin);
+        	cv::imshow("contours", cons);
+		if (cv::waitKey(33) == 27) break;
 	}
 	printf("No errors!\n");
 	return EXIT_SUCCESS;

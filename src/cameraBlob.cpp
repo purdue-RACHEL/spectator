@@ -12,6 +12,7 @@
 #include "blobDetector.h"
 #include "CameraInterface.hpp"
 #include "ColorTracker.hpp"
+#include "ContourTracker.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -147,11 +148,13 @@ int main(void) {
 	for (;;) {
 		in = cam.readColor();
 		bin = colTrack.filterImage(in, 164, 89, 175, 22, 255, 255);
-        conTrack.findContours(bin);
-        cons = conTrack.drawContours();
+        	conTrack.findContours(bin);
+		cv::Point ballCenter = conTrack.findBallCenter();
+		std::cout << ballCenter << std::endl;
+		cv::Mat cons = conTrack.drawContours(in.rows, in.cols);
 		cv::imshow("orig", in);
 		cv::imshow("filtered", bin);
-        cv::imshow("contours", cons);
+        	cv::imshow("contours", cons);
 		if (cv::waitKey(33) == 27) break;
 	}
 	printf("No errors!\n");
