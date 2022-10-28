@@ -46,7 +46,7 @@ env.AlwaysBuild(RUN)
 BUILDOPTION = GetOption('buildOption')
 if BUILDOPTION == None:
     print('Specify a build option using --build')
-    print('Options: GameLoop, Uart, Camera, Projector')
+    print('Options: GameLoop, Uart, Camera, Projector, ColorPicker')
     exit()
 elif BUILDOPTION == 'Uart':
     # Add test flags that surround the main function you want to run
@@ -64,5 +64,5 @@ elif BUILDOPTION == 'Camera':
     env.Program(BUILDDIR+'runme', [BUILDDIR+'cameraBlob.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'ColorTracker.cpp', BUILDDIR+'ContourTracker.cpp'])
 elif BUILDOPTION == 'ColorPicker':
     env.Replace(CPPDEFINES = '')
-    env.Program(BUILDDIR+'runme', [BUILDDIR+'colorPicker.cpp',BUILDDIR+'CameraInterface.cpp'])
+    env.Program(BUILDDIR+'runme', [BUILDDIR+'colorPicker.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp'])
 

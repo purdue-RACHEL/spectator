@@ -1,3 +1,5 @@
+#ifndef DISABLEOPENCV
+
 #include "Projector.hpp"
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -12,11 +14,31 @@ int main(int argc, char ** argv){
 	UartDecoder uart(uartDeviceStr);
 	proj.updateScore(20,20);
 	for(;;){
-		proj.redraw();
+		proj.refresh();
 	}
 
 }
 #endif
+
+#ifdef TESTCOLPROJ
+#include "CameraInterface.hpp"
+int main(int argc, char ** argv){
+	Projector proj(1920,1080);
+	CameraInterface cam();
+	int pval(FALSE); //Very important to use C-style "FALSE", not C++-style "false"!
+	cam.setProperty(true, STREAM_PROPERTY_AUTO_WHITE_BALANCE, &pval);
+	cam.setProperty(true, STREAM_PROPERTY_AUTO_EXPOSURE, &pval);
+	for(;;){
+		proj.refreash();
+
+		if (cv::waitKey(25) == 27) {
+			return EXIT_SUCCESS
+		}
+	}
+
+}
+#endif
+
 
 Projector::Projector(int w, int h){
 	Projector &proj = *this;
@@ -62,7 +84,6 @@ void Projector::refresh(){
 	cv::namedWindow("Projector", cv::WND_PROP_FULLSCREEN);
 	cv::setWindowProperty("Projector", cv::WND_PROP_FULLSCREEN, cv::WINDOW_NORMAL);	
 	cv::imshow("Projector", proj.display);
-	cv::pollKey();
 	proj.display = cv::Mat(proj.h, proj.w, CV_8UC3, cv::Scalar(255, 255, 255));
 	
 }
@@ -112,3 +133,39 @@ void Projector::writeRotateText(std::string& text, float size, int x, int y, int
 	}	
 
 }
+
+#if FALSE
+void Projector::renderTiff(std::string& fname, int x, int y){
+	TIFF* in = TIFFOpen(fname, "r");
+
+	if (in == NULL) {
+		std::cout << fname << " Could Not be Opened" << std::endl;
+		return;
+	}	
+	if (in) {
+		uint32 imagelength;
+		TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imagelength);
+		w = (int) TIFFScanlineSize(in) / (sizeof(unsigned char) * 3);
+		h = imagelength;
+
+		size_t npixels;
+		uint32* raster;
+
+		npixels = w * h;
+		raster = (uint32*)_TIFFmalloc(npixels * sizeof(uint32));
+		if (raster != NULL) {
+			if (TIFFReadRGBAImage(in, w, h, raster, 0)){
+				for (int i =0; i<h; i++){
+					for (int j = 0; j<w; j++){
+						proj.display.at<cv::Vec3b>( = raster[i * w + j];
+					}
+				}
+			}
+			_TIFFfree(raster);
+		}
+	}
+	TIFFClose(in);
+	
+}
+#endif
+#endif
