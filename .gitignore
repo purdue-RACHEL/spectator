@@ -1,5 +1,6 @@
 # Ignore all build files
 build/
+.sconsign.dblite
 
 # Ignore .vscode files
 **/.vscode
