@@ -6,9 +6,6 @@
 #include "CameraInterface.hpp"
 
 CameraInterface::~CameraInterface() {
-	delete m_device;
-	delete m_depthStream;
-	delete m_colorStream;
 }
 
 /*
@@ -103,48 +100,23 @@ cv::Mat CameraInterface::readColor() {
 	return colorMat;
 }
 
-auto CameraInterface::getProperty(CameraInterface::StreamProperty p, bool color ) {
-	int dataSize = 0;
-	switch (p) {
-		case STREAM_PROPERTY_CROPPING: // OniCropping*  
-			OniCropping* data = nullptr;
-			dataSize = sizeof(OniCropping*);
-			break;
-		case STREAM_PROPERTY_HORIZONTAL_FOV: // float: radians
-			float data = 0;
-			dataSize = sizeof(float);
-			break;
-		case STREAM_PROPERTY_VERTICAL_FOV: // float: radians
-			float data = 0;
-			dataSize = sizeof(float);
-			break;
-		case STREAM_PROPERTY_VIDEO_MODE: // OniVideoMode*
-			OniVideoMode* data = nullptr;
-			dataSize = sizeof(OniVideoMode*);
-			break;
-		default: //only a few of the types aren't ints, OniBool is just an int in its definition
-			int data = 0;
-			dataSize = sizeof(int);
-			break;
-	}
-
+void CameraInterface::getProperty(CameraInterface::StreamProperty p, void *data, bool color ) {
+	int dataSize;
 	switch (color) {
 		case true:
-			m_colorStream -> getProperty(p, &data, &dataSize);
+			m_colorStream -> getProperty(p, data, &dataSize);
 			break;
 		case false:
-			m_depthStream -> getProperty(p, &data, &dataSize);
+			m_depthStream -> getProperty(p, data, &dataSize);
 			break;
 	}
-
-	return data;
 }
 
 void CameraInterface::setProperty(CameraInterface::StreamProperty p, void *data, bool color) {
 	int dataSize = 0;
 	switch (p) {
 		case STREAM_PROPERTY_CROPPING: // OniCropping*  
-			dataSize = sizeof(openni::OniCropping*);
+			dataSize = sizeof(OniCropping*);
 			break;
 		case STREAM_PROPERTY_HORIZONTAL_FOV: // float: radians
 			dataSize = sizeof(float);
@@ -153,7 +125,7 @@ void CameraInterface::setProperty(CameraInterface::StreamProperty p, void *data,
 			dataSize = sizeof(float);
 			break;
 		case STREAM_PROPERTY_VIDEO_MODE: // OniVideoMode*
-			dataSize = sizeof(openni::OniVideoMode*);
+			dataSize = sizeof(OniVideoMode*);
 			break;
 		default: //only a few of the types aren't ints, OniBool is just an int in its definition
 			dataSize = sizeof(int);

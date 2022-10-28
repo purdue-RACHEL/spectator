@@ -4,11 +4,13 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
-#include <tiffio.h>
+
+#endif
 
 #ifdef TESTPROJECTOR
-#include "UartDecoder.hpp"
 #include <string>
+#include <tiffio.h>
+#include "UartDecoder.hpp"
 int main(int argc, char ** argv){
 	Projector proj(1920,1080);
 	std::string uartDeviceStr = "/dev/ttyUSB0";
@@ -189,9 +191,9 @@ void Projector::renderTiff(std::string& fname, int xOff, int yOff){
 				}
 			}
 			_TIFFfree(raster);
-
+		}
+		TIFFClose(in);
 	}
-	TIFFClose(in);
-}
 }
 #endif
+
