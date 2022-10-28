@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <tiffio.h>
 
 #ifdef TESTPROJECTOR
 #include "UartDecoder.hpp"
@@ -135,37 +136,62 @@ void Projector::writeRotateText(std::string& text, float size, int x, int y, int
 }
 
 #if FALSE
-void Projector::renderTiff(std::string& fname, int x, int y){
-	TIFF* in = TIFFOpen(fname, "r");
-
+void Projector::renderTiff(std::string& fname, int xOff, int yOff){
+	// Get and easy reference to the projector
+	Projector &proj = *this;
+	// Convert to Cstring for TIFF reading
+	char * cstr = new char[fname.length() + 1];
+	strcpy_s(cstr, fname.length()+1, fname.c_str());
+	// Attempt to open TIFF
+	TIFF* in = TIFFOpen(cstr, "r");
+	// If TIFF cannot be opened
 	if (in == NULL) {
-		std::cout << fname << " Could Not be Opened" << std::endl;
+	std::cout << fname << " could not be opened" << std::endl;
 		return;
-	}	
+	}
+	// TIFF opened
 	if (in) {
-		uint32 imagelength;
-		TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imagelength);
-		w = (int) TIFFScanlineSize(in) / (sizeof(unsigned char) * 3);
-		h = imagelength;
-
-		size_t npixels;
-		uint32* raster;
-
-		npixels = w * h;
-		raster = (uint32*)_TIFFmalloc(npixels * sizeof(uint32));
+		// Find out TIFF dimensions
+		uint32 imageLength;
+		TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imageLength);
+		int imageW = (int) TIFFScanlineSize(in) / (sizeof(unsigned char) * 3);
+		int imageH = imageLength;
+		std::cerr << "TIFF WIDTH: " << imageW << std::endl;
+		std::cerr << "TIFF HEIGHT: " << imageH << std::endl;
+	
+		// Read the TIFF image
+		size_t nPixels;
+		uint32* raster // Image buffer
+		nPixels = imageW * imageH;
+		raster = (uint32*)_TIFFmalloc(nPixels * sizeof(uint32));
 		if (raster != NULL) {
-			if (TIFFReadRGBAImage(in, w, h, raster, 0)){
-				for (int i =0; i<h; i++){
-					for (int j = 0; j<w; j++){
-						proj.display.at<cv::Vec3b>( = raster[i * w + j];
+			if (TIFFReadRGBAImage(in, imageW, imageH, raster, 0)) {
+				for (int i = 0; i < imageH; i++) {
+					for (int j = 0; j < imageW; j++) {
+						// Check the bounds of the projector
+						if(xOff + j >= proj.w)
+							break;
+						if(yOff + i >= proj.h)
+							break;
+						if(xOff + j < 0)
+							continue;	
+						if(yOff + i < 0)
+							continue;
+						// Get RGB values from unsigned int
+						uint32 currCol = raster[i *imageW + j];
+						// This could be wrong, need to test
+						char r = (currCol >> 16) & 0xFF;
+						char g = (currCol >> 8) & 0xFF;
+						char b = (currCol) & 0xFF;
+						// Set the current pixel from the raster
+						proj.display.at<cv::Vec3b>(j + xOff, i + yOff) = cv::Vec3b(b,g,r);
 					}
 				}
 			}
 			_TIFFfree(raster);
-		}
+
 	}
 	TIFFClose(in);
-	
 }
-#endif
+}
 #endif
