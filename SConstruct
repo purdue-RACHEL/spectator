@@ -42,27 +42,41 @@ VariantDir(BUILDDIR,SRCDIR)
 RUN = env.Command(target = 'runme', source=BUILDDIR+'runme', action=[BUILDDIR+'runme','rm -rf '+BUILDDIR,'mkdir '+BUILDDIR])
 env.AlwaysBuild(RUN)
 
+# Define build options
+BUILDOPTS = ['GameLoop', 'Uart', 'Camera', 'Projector', 'ColorPicker']
+
+# create empty dictionary to store buildflags and arguments for env.Program()
+BUILDDICT = {opt: {'defs': list(), 'args': list()} for opt in BUILDOPTS}
+
+BUILDDICT['GameLoop'] = {
+    'defs': ['TESTGAMELOOP', 'DISABLEOPENCV'],
+    'args': [BUILDDIR+'GameLoop.cpp',BUILDDIR+'UartDecoder.cpp',BUILDDIR+'Projector.cpp']
+    }
+BUILDDICT['Uart'] = {
+    'defs': ['TESTUART'],
+    'args': [BUILDDIR+'UartDecoder.cpp']
+    }
+BUILDDICT['Projector'] = {
+    'defs': ['TESTPROJECTOR'],
+    'args': [BUILDDIR+'Projector.cpp',BUILDDIR+'UartDecoder.cpp']
+    }
+BUILDDICT['Camera'] = {
+    'defs': [''],
+    'args': [BUILDDIR+'cameraBlob.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'ColorTracker.cpp', BUILDDIR+'ContourTracker.cpp']
+    }
+BUILDDICT['ColorPicker'] = {
+    'defs': [''],
+    'args': [BUILDDIR+'colorPicker.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp']
+    }
+
 # Build program depending on build option parameter
 BUILDOPTION = GetOption('buildOption')
 if BUILDOPTION == None:
     print('Specify a build option using --build')
-    print('Options: GameLoop, Uart, Camera, Projector, ColorPicker')
+    print('Options: ', end = None)
+    print(BUILDOPTS, sep=', ')
     exit()
-elif BUILDOPTION == 'Uart':
-    # Add test flags that surround the main function you want to run
-    env.Replace(CPPDEFINES = 'TESTUART')
-    # Add all the cpp files needed. Keep the executable name 'runme' the same
-    env.Program(BUILDDIR+'runme', [BUILDDIR+'UartDecoder.cpp'])
-elif BUILDOPTION == 'GameLoop':
-    env.Replace(CPPDEFINES = ['TESTGAMELOOP', 'DISABLEOPENCV'])
-    env.Program(BUILDDIR+'runme', [BUILDDIR+'GameLoop.cpp',BUILDDIR+'UartDecoder.cpp',BUILDDIR+'Projector.cpp'])
-elif BUILDOPTION == 'Projector':
-    env.Replace(CPPDEFINES = 'TESTPROJECTOR')
-    env.Program(BUILDDIR+'runme', [BUILDDIR+'Projector.cpp',BUILDDIR+'UartDecoder.cpp'])
-elif BUILDOPTION == 'Camera':
-    env.Replace(CPPDEFINES = '')
-    env.Program(BUILDDIR+'runme', [BUILDDIR+'cameraBlob.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'ColorTracker.cpp', BUILDDIR+'ContourTracker.cpp'])
-elif BUILDOPTION == 'ColorPicker':
-    env.Replace(CPPDEFINES = '')
-    env.Program(BUILDDIR+'runme', [BUILDDIR+'colorPicker.cpp',BUILDDIR+'CameraInterface.cpp', BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp'])
+else:
+    env.Replace(CPPDEFINES = BUILDDICT[BUILDOPTION]['defs'])
+    env.Program(BUILDDIR+'runme', BUILDDICT[BUILDOPTION]['args'])
 
