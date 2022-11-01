@@ -4,12 +4,15 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <string.h>
+#include <stdlib.h>
+#include <tiffio.h>
+#include <cstring>
+#include <stdint.h>
 
 #endif
 
 #ifdef TESTPROJECTOR
-#include <string>
-#include <tiffio.h>
 #include "UartDecoder.hpp"
 int main(int argc, char ** argv){
 	Projector proj(1920,1080);
@@ -17,6 +20,8 @@ int main(int argc, char ** argv){
 	UartDecoder uart(uartDeviceStr);
 	proj.updateScore(20,20);
 	for(;;){
+		std::string path= "/home/rachel/git/spectator/menus/gameover.tiff";
+		proj.renderTiff(path,0,1080/2 - 894/2);
 		proj.refresh();
 	}
 
@@ -32,11 +37,11 @@ int main(int argc, char ** argv){
 	cam.setProperty(true, STREAM_PROPERTY_AUTO_WHITE_BALANCE, &pval);
 	cam.setProperty(true, STREAM_PROPERTY_AUTO_EXPOSURE, &pval);
 	for(;;){
-		proj.refreash();
+		proj.refresh();
 
 		if (cv::waitKey(25) == 27) {
 			return EXIT_SUCCESS
-		}
+	}
 	}
 
 }
@@ -88,6 +93,7 @@ void Projector::refresh(){
 	cv::setWindowProperty("Projector", cv::WND_PROP_FULLSCREEN, cv::WINDOW_NORMAL);	
 	cv::imshow("Projector", proj.display);
 	proj.display = cv::Mat(proj.h, proj.w, CV_8UC3, cv::Scalar(255, 255, 255));
+	cv::pollKey();
 	
 }
 void Projector::writeText(std::string& text, float  size, int x, int y, int r, int g, int b){
@@ -137,13 +143,12 @@ void Projector::writeRotateText(std::string& text, float size, int x, int y, int
 
 }
 
-#if FALSE
 void Projector::renderTiff(std::string& fname, int xOff, int yOff){
 	// Get and easy reference to the projector
 	Projector &proj = *this;
 	// Convert to Cstring for TIFF reading
 	char * cstr = new char[fname.length() + 1];
-	strcpy_s(cstr, fname.length()+1, fname.c_str());
+	strcpy(cstr, fname.c_str());
 	// Attempt to open TIFF
 	TIFF* in = TIFFOpen(cstr, "r");
 	// If TIFF cannot be opened
@@ -154,22 +159,22 @@ void Projector::renderTiff(std::string& fname, int xOff, int yOff){
 	// TIFF opened
 	if (in) {
 		// Find out TIFF dimensions
-		uint32 imageLength;
-		TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imageLength);
-		int imageW = (int) TIFFScanlineSize(in) / (sizeof(unsigned char) * 3);
-		int imageH = imageLength;
-		std::cerr << "TIFF WIDTH: " << imageW << std::endl;
-		std::cerr << "TIFF HEIGHT: " << imageH << std::endl;
+		uint32_t imageW, imageH;
+		TIFFGetField(in, TIFFTAG_IMAGEWIDTH, &imageW);
+		TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imageH);
+		//std::cerr << "TIFF WIDTH: " << imageW << std::endl;
+		//std::cerr << "TIFF HEIGHT: " << imageH << std::endl;
 	
 		// Read the TIFF image
-		size_t nPixels;
-		uint32* raster // Image buffer
+		size_t nPixels = 0;
+		uint32_t* raster; // Image buffer
 		nPixels = imageW * imageH;
-		raster = (uint32*)_TIFFmalloc(nPixels * sizeof(uint32));
+		raster = (uint32_t*)_TIFFmalloc(nPixels * sizeof(uint32));
 		if (raster != NULL) {
-			if (TIFFReadRGBAImage(in, imageW, imageH, raster, 0)) {
+			if (TIFFReadRGBAImage(in, imageW, imageH, raster, 0)) { // Seg Fault Here
 				for (int i = 0; i < imageH; i++) {
 					for (int j = 0; j < imageW; j++) {
+						//std::cout << i << " " << j << std::endl;
 						// Check the bounds of the projector
 						if(xOff + j >= proj.w)
 							break;
@@ -180,13 +185,17 @@ void Projector::renderTiff(std::string& fname, int xOff, int yOff){
 						if(yOff + i < 0)
 							continue;
 						// Get RGB values from unsigned int
-						uint32 currCol = raster[i *imageW + j];
+						uint32_t currCol = raster[(imageH - i-1)*imageW + j];
 						// This could be wrong, need to test
-						char r = (currCol >> 16) & 0xFF;
-						char g = (currCol >> 8) & 0xFF;
-						char b = (currCol) & 0xFF;
+						uint8_t a = (currCol >> 24) & 0xFF;
+						uint8_t b = (currCol >> 16) & 0xFF;
+						uint8_t g = (currCol >> 8) & 0xFF;
+						uint8_t r = (currCol) & 0xFF;
+						//std::cout << (unsigned int)r << " " << (unsigned int)g << " " <<  (unsigned int)b << " " << (unsigned int) a << std::endl;
 						// Set the current pixel from the raster
-						proj.display.at<cv::Vec3b>(j + xOff, i + yOff) = cv::Vec3b(b,g,r);
+						if(a != 0)
+							proj.display.at<cv::Vec3b>(i + yOff, j + xOff) = cv::Vec3b(b,g,r);
+
 					}
 				}
 			}
@@ -195,5 +204,4 @@ void Projector::renderTiff(std::string& fname, int xOff, int yOff){
 		TIFFClose(in);
 	}
 }
-#endif
 

@@ -3,6 +3,7 @@
 #define INCLUDE_PROJECTOR
 
 #include <opencv2/opencv.hpp>
+#include <string.h>
 
 class Projector{
     public:
