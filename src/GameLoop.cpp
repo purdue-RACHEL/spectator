@@ -43,6 +43,7 @@ int main()
 
         uart.readSerial();
 
+
         bounce = uart.getBounce();
         button = uart.getButton();
 
@@ -140,6 +141,7 @@ StatusChange handleBounce(Bounce bounce) {
             }
 
             timeout = invalid_timeout;
+	    previous_bounce = NOBOUNCE;
         }
     }
 

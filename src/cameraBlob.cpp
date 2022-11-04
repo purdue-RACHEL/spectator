@@ -144,16 +144,18 @@ int main(void) {
 	cv::Mat in, bin;
 	cv::Scalar lower = cv::Scalar(164, 89, 175);
 	cv::Scalar upper = cv::Scalar(22, 255, 255);
+	conTrack.setTableGUI(cam);
 	
 	for (;;) {
 		in = cam.readColor();
 		bin = colTrack.filterImage(in, 164, 89, 175, 22, 255, 255);
         	conTrack.findContours(bin);
 		cv::Point ballCenter = conTrack.findBallCenter();
-		std::cout << ballCenter << std::endl;
+		std::cout << ballCenter - conTrack.table_offset << std::endl;
 		cv::Mat cons = conTrack.drawContours(in.rows, in.cols);
 		cv::imshow("orig", in);
 		cv::imshow("filtered", bin);
+		cv::circle(cons, conTrack.table_offset, 3, cv::Scalar(0,0,225), -1);
         	cv::imshow("contours", cons);
 		if (cv::waitKey(33) == 27) break;
 	}

@@ -100,6 +100,31 @@ cv::Mat CameraInterface::readColor() {
 	return colorMat;
 }
 
+cv::Mat CameraInterface::readDepthSlice(uint16_t start) {
+	m_depthStream->readFrame(&m_depthFrame);
+	size_t width = m_depthFrame.getWidth();
+	size_t height = m_depthFrame.getHeight();
+	size_t depthSize = width * height;
+	cv::Mat depthMat = cv::Mat(m_depthFrame.getHeight(), m_depthFrame.getWidth(), CV_16UC1, (void *) m_depthFrame.getData());
+	depthMat = depthMat.clone();
+	cv::Mat outMat(height, width, CV_8UC1);
+	uint16_t stop = start +120;
+	uint16_t curr;
+	//printf("%d %d", start, stop);
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			curr = depthMat.at<uint16_t>(y, x);
+			//printf("%d\n", curr);
+			if ((curr > stop) || (curr < start)) {
+				outMat.at<uint8_t>(y, width - x) = 0;
+			} else {
+				outMat.at<uint8_t>(y, width - x) = 255 - (depthMat.at<uint16_t>(y, x) - start) & 0xff;
+			}
+		}
+	}
+
+}
+
 void CameraInterface::getProperty(CameraInterface::StreamProperty p, void *data, bool color ) {
 	int dataSize;
 	switch (color) {

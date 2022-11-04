@@ -5,6 +5,10 @@
 #include <opencv2/optflow.hpp>
 #include <opencv2/video.hpp>
 #include <vector>
+#ifndef TESTPROJECTOR
+	#include "CameraInterface.hpp"
+	#include <OpenNI.h>
+#endif
 
 class ContourTracker{
     public:
@@ -18,5 +22,9 @@ class ContourTracker{
         cv::Mat drawContours(int, int);
         std::vector<std::vector<cv::Point>> getContours();
 	cv::Point findBallCenter();
+#ifndef TESTPROJECTOR
+	void setTableGUI(CameraInterface&);
+#endif
+
 
 };

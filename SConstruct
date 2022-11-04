@@ -20,7 +20,7 @@ BUILDOPTS = ['GameLoop', 'Uart', 'Camera', 'Projector', 'ColorPicker', 'BuildTes
 BUILDDICT = {opt: {'defs': list(), 'source': list()} for opt in BUILDOPTS}
 
 BUILDDICT['GameLoop'] = {
-    'defs': ['TESTGAMELOOP', 'DISABLEOPENCV'],
+    'defs': ['TESTGAMELOOP'],
     'source': [BUILDDIR+'GameLoop.cpp',BUILDDIR+'UartDecoder.cpp',BUILDDIR+'Projector.cpp']
     }
 BUILDDICT['Uart'] = {

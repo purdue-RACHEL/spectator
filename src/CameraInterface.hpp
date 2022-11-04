@@ -52,10 +52,12 @@ class CameraInterface {
 		~CameraInterface();
 
 		cv::Mat readDepth16U();
+		cv::Mat readDepthSlice(uint16_t start);
 		cv::Mat readColor();
 
-		void getProperty(StreamProperty p, void *data, bool color = true);
+		auto getProperty(StreamProperty p, bool color = true);
 		void setProperty(StreamProperty p, void *data, bool color = true);
+		void getProperty(StreamProperty p, void *data, bool color );
 
 
 	private:

@@ -1,14 +1,17 @@
 #include "ContourTracker.hpp"
 
+
 ContourTracker::ContourTracker(){
-    table_offset = cv::Point2f(0.0f,0.0f);
+    table_offset = cv::Point2d(0,0);
 }
 
 void ContourTracker::findContours(cv::Mat threshold_image){
     ContourTracker &curr = *this;
 	std::vector<std::vector<cv::Point>> _contours; 
     std::vector<cv::Vec4i> hierarchy;
-	cv::findContours(threshold_image, _contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, curr.table_offset);
+    	//offset taken into account on contour data
+	//cv::findContours(threshold_image, _contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, curr.table_offset);
+	cv::findContours(threshold_image, _contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
     curr.contours = _contours;
 }
 
@@ -50,3 +53,32 @@ cv::Point ContourTracker::findBallCenter(){
 	}
 	return cv::Point(ballx,bally);
 }
+#ifndef TESTPROJECTOR
+void ContourTracker::setTableGUI(CameraInterface & cam){
+
+    	ContourTracker &curr = *this;
+	for(;;){
+		cv::Mat in = cam.readColor();
+		cv::circle(in, curr.table_offset, 3, cv::Scalar(0,0,225), -1);
+		cv::imshow("Adjust Table:(WASD), Set Point:(q)", in);
+		switch(cv::waitKey(33)){
+			case 'w':
+				curr.table_offset.y = curr.table_offset.y - 2;
+				break;
+			case 'a':
+				curr.table_offset.x = curr.table_offset.x - 2;
+				break;
+			case 's':
+				curr.table_offset.y = curr.table_offset.y + 2;
+				break;
+			case 'd':
+				curr.table_offset.x = curr.table_offset.x + 2;
+				break;
+			case 'q':
+				cv::destroyWindow("Adjust Table:(WASD), Set Point:(q)");
+				return;
+		}
+	}
+
+}
+#endif

@@ -15,14 +15,15 @@
 #ifdef TESTPROJECTOR
 #include "UartDecoder.hpp"
 int main(int argc, char ** argv){
-	Projector proj(1920,1080);
+	Projector proj(1024,768);
 	std::string uartDeviceStr = "/dev/ttyUSB0";
 	UartDecoder uart(uartDeviceStr);
-	proj.updateScore(20,20);
 	for(;;){
 		std::string path= "/home/rachel/git/spectator/menus/gameover.tiff";
-		proj.renderTiff(path,0,1080/2 - 894/2);
-		proj.refresh();
+		proj.renderTiff(path,0,0,.5f);
+		if(proj.refresh()){
+			break;
+		}
 	}
 
 }
@@ -43,7 +44,6 @@ int main(int argc, char ** argv){
 			return EXIT_SUCCESS
 	}
 	}
-
 }
 #endif
 
@@ -57,7 +57,7 @@ Projector::Projector(int w, int h){
 }
 void Projector::drawCenterLine(){	
 	Projector &proj = *this;
-	proj.renderSquare(1920/2 - 8,0,16,1080,0,0,0);
+	proj.renderSquare(1920/2 - 8,0,16,1080,0,0,1);
 }
 void Projector::renderSquare(int x, int y, int w, int h, int r, int g, int b){
 	Projector &proj = *this;
@@ -87,14 +87,15 @@ void Projector::renderSquare(int x, int y, int w, int h, int r, int g, int b){
 		}
 	}	
 }
-void Projector::refresh(){
+int Projector::refresh(){
 	Projector &proj = *this;
 	cv::namedWindow("Projector", cv::WND_PROP_FULLSCREEN);
 	cv::setWindowProperty("Projector", cv::WND_PROP_FULLSCREEN, cv::WINDOW_NORMAL);	
 	cv::imshow("Projector", proj.display);
 	proj.display = cv::Mat(proj.h, proj.w, CV_8UC3, cv::Scalar(255, 255, 255));
-	cv::pollKey();
-	
+	if (cv::waitKey(33) == 27) return 1;
+	return 0;
+
 }
 void Projector::writeText(std::string& text, float  size, int x, int y, int r, int g, int b){
 	Projector &proj = *this;
@@ -143,7 +144,7 @@ void Projector::writeRotateText(std::string& text, float size, int x, int y, int
 
 }
 
-void Projector::renderTiff(std::string& fname, int xOff, int yOff){
+void Projector::renderTiff(std::string& fname, int xOff, int yOff,float scale){
 	// Get and easy reference to the projector
 	Projector &proj = *this;
 	// Convert to Cstring for TIFF reading
@@ -172,20 +173,23 @@ void Projector::renderTiff(std::string& fname, int xOff, int yOff){
 		raster = (uint32_t*)_TIFFmalloc(nPixels * sizeof(uint32));
 		if (raster != NULL) {
 			if (TIFFReadRGBAImage(in, imageW, imageH, raster, 0)) { // Seg Fault Here
-				for (int i = 0; i < imageH; i++) {
-					for (int j = 0; j < imageW; j++) {
+				for (int j = 0; j < (int) (scale * imageH); j++) {
+					for (int i = 0; i < (int) (scale * imageW); i++) {
 						//std::cout << i << " " << j << std::endl;
 						// Check the bounds of the projector
-						if(xOff + j >= proj.w)
+						if(xOff + i >= proj.w)
 							break;
-						if(yOff + i >= proj.h)
+						if(yOff + j >= proj.h)
 							break;
-						if(xOff + j < 0)
+						if(xOff + i < 0)
 							continue;	
-						if(yOff + i < 0)
+						if(yOff + j < 0)
 							continue;
 						// Get RGB values from unsigned int
-						uint32_t currCol = raster[(imageH - i-1)*imageW + j];
+						
+						int i_scaled = (int) (i/scale);
+						int j_scaled = (int) (j/scale);
+						uint32_t currCol = raster[(imageH - j_scaled-1)*imageW + i_scaled];
 						// This could be wrong, need to test
 						uint8_t a = (currCol >> 24) & 0xFF;
 						uint8_t b = (currCol >> 16) & 0xFF;
@@ -194,7 +198,7 @@ void Projector::renderTiff(std::string& fname, int xOff, int yOff){
 						//std::cout << (unsigned int)r << " " << (unsigned int)g << " " <<  (unsigned int)b << " " << (unsigned int) a << std::endl;
 						// Set the current pixel from the raster
 						if(a != 0)
-							proj.display.at<cv::Vec3b>(i + yOff, j + xOff) = cv::Vec3b(b,g,r);
+							proj.display.at<cv::Vec3b>(j + yOff, i + xOff) = cv::Vec3b(b,g,r);
 
 					}
 				}
