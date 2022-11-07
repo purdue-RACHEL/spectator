@@ -14,7 +14,7 @@ env = Environment(CCFLAGS='-fpermissive -I/home/rachel/git/spectator/inc/OpenNI2
         LIBS=['tiff', 'OpenNI2', 'opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_highgui', 'opencv_video', 'opencv_imgproc', 'opencv_videoio', 'opencv_optflow'], LIBPATH=['/home/rachel/git/spectator', '/usr/local/lib'],ENV = os.environ)
 
 # Define build options
-BUILDOPTS = ['GameLoop', 'Uart', 'Camera', 'Projector', 'ColorPicker', 'BuildTest']
+BUILDOPTS = ['GameLoop', 'Uart', 'Camera', 'Projector', 'ColorPicker', 'BuildTest', 'Table']
 
 # create empty dictionary to store buildflags and arguments for env.Program()
 BUILDDICT = {opt: {'defs': list(), 'source': list()} for opt in BUILDOPTS}
@@ -42,6 +42,10 @@ BUILDDICT['ColorPicker'] = {
 BUILDDICT['BuildTest'] = {
     'defs': [''],
     'source': []
+    }
+BUILDDICT['Table'] = {
+    'defs': ['TESTTABLE'],
+    'source': [BUILDDIR+'CameraInterface.cpp',BUILDDIR+'ColorTracker.cpp', BUILDDIR+'ContourTracker.cpp', BUILDDIR+'Projector.cpp']
     }
 
 # Set up build option parameter
