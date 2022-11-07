@@ -13,6 +13,7 @@
 #include "CameraInterface.hpp"
 #include "ColorTracker.hpp"
 #include "ContourTracker.hpp"
+#include "Table.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -144,14 +145,13 @@ int main(void) {
 	cv::Mat in, bin;
 	cv::Scalar lower = cv::Scalar(164, 89, 175);
 	cv::Scalar upper = cv::Scalar(22, 255, 255);
-	conTrack.setTableGUI(cam);
 	
 	for (;;) {
 		in = cam.readColor();
 		bin = colTrack.filterImage(in, 164, 89, 175, 22, 255, 255);
         	conTrack.findContours(bin);
 		cv::Point ballCenter = conTrack.findBallCenter();
-		std::cout << ballCenter - conTrack.table_offset << std::endl;
+		std::cout << ballCenter << std::endl;
 		cv::Mat cons = conTrack.drawContours(in.rows, in.cols);
 		cv::imshow("orig", in);
 		cv::imshow("filtered", bin);

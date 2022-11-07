@@ -53,32 +53,3 @@ cv::Point ContourTracker::findBallCenter(){
 	}
 	return cv::Point(ballx,bally);
 }
-#ifndef TESTPROJECTOR
-void ContourTracker::setTableGUI(CameraInterface & cam){
-
-    	ContourTracker &curr = *this;
-	for(;;){
-		cv::Mat in = cam.readColor();
-		cv::circle(in, curr.table_offset, 3, cv::Scalar(0,0,225), -1);
-		cv::imshow("Adjust Table:(WASD), Set Point:(q)", in);
-		switch(cv::waitKey(33)){
-			case 'w':
-				curr.table_offset.y = curr.table_offset.y - 2;
-				break;
-			case 'a':
-				curr.table_offset.x = curr.table_offset.x - 2;
-				break;
-			case 's':
-				curr.table_offset.y = curr.table_offset.y + 2;
-				break;
-			case 'd':
-				curr.table_offset.x = curr.table_offset.x + 2;
-				break;
-			case 'q':
-				cv::destroyWindow("Adjust Table:(WASD), Set Point:(q)");
-				return;
-		}
-	}
-
-}
-#endif
