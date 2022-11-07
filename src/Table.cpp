@@ -1,13 +1,15 @@
 #include "Table.hpp"
 #include "Projector.hpp"
+#include <string>
+
 #ifdef TESTTABLE
-int main(void){
+int main(int argc, char ** argv){
     Projector proj = Projector(1024,768);
 	CameraInterface cam = CameraInterface();
 	ColorTracker colTrack = ColorTracker();
     ContourTracker conTrack = ContourTracker();
     Table table = Table(cam, colTrack, conTrack);
-    table.setTableBorder()
+    table.setTableBorder();
     for(;;){
         cv::Point2f curPos = table.getNormalizedCoords();
         std::cout << curPos << std::endl; 
@@ -18,7 +20,7 @@ int main(void){
     return EXIT_SUCCESS;
 }
 #endif
-void Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack){
+Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack){
     cam = cam;
     colTrack = colTrack;
     conTrack = conTrack;
@@ -29,10 +31,10 @@ void Table::setTableBorder(){
     table.bottom_right = setPointGUI("SET BOTTOM RIGHT CORNER");
 
 }
-cv::Point Table::setPointGUI(String & windowName){
+cv::Point Table::setPointGUI(const char * windowName){
     Table &table = *this;
+	cv::Point2f curr_point = cv::Point2f(0,0);
 	for(;;){
-        cv::Point2f curr_point;
 		cv::Mat in = table.cam.readColor();
 		cv::circle(in, curr_point, 3, cv::Scalar(0,0,225), -1);
 		cv::imshow(windowName, in);
@@ -56,9 +58,9 @@ cv::Point Table::setPointGUI(String & windowName){
 	}
 }
 
-Point2f Table::getNormalizedCoords(cv::Point2f ballPos){
+cv::Point2f Table::getNormalizedCoords(){
     Table &table = *this;
-    currPos = table.getBallCoords();
+    cv::Point2f currPos = table.getBallCoords();
     if((currPos.x < table.top_left.x) || (currPos.x > table.bottom_right.x)){
        return cv::Point2f(-1,-1); 
     }
@@ -73,12 +75,12 @@ Point2f Table::getNormalizedCoords(cv::Point2f ballPos){
         cv::circle(in, table.top_left, 3, cv::Scalar(0,0,225), -1); 
         cv::circle(in, table.bottom_right, 3, cv::Scalar(0,0,225), -1); 
         cv::circle(in, retPos, 3, cv::Scalar(0,225,225), -1); 
-        cv::imshow("Table and Ball", in)
+        cv::imshow("Table and Ball", in);
     #endif
     return currPos;
 }
 
-Point2f Table::getBallCoords(){
+cv::Point2f Table::getBallCoords(){
     Table &table = *this;
     cv::Mat in, bin;
     in = cam.readColor();

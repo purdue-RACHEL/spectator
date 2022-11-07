@@ -11,16 +11,17 @@
 
 class Table{
     public:
-        CameraInterface * cam;
-        ColorTracker * colTrack;
-        ContourTracker * conTrack;
+        CameraInterface cam;
+        ColorTracker colTrack;
+        ContourTracker conTrack;
         cv::Point2f top_left;
         cv::Point2f bottom_right; 
 
         Table(CameraInterface&, ColorTracker&, ContourTracker&);
-        cv::Point setPointGUI(String &);
+        cv::Point setPointGUI(const char *);
         void setTableBorder();
-        cv::Point2f getNormalizedCoords();
+	cv::Point2f getNormalizedCoords();
+	cv::Point2f getBallCoords();	
 
 
-}
+};

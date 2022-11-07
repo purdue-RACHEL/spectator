@@ -45,7 +45,7 @@ BUILDDICT['BuildTest'] = {
     }
 BUILDDICT['Table'] = {
     'defs': ['TESTTABLE'],
-    'source': [BUILDDIR+'CameraInterface.cpp',BUILDDIR+'ColorTracker.cpp', BUILDDIR+'ContourTracker.cpp', BUILDDIR+'Projector.cpp']
+    'source': [BUILDDIR+'CameraInterface.cpp',BUILDDIR+'Table.cpp',BUILDDIR+'ColorTracker.cpp',BUILDDIR+'ContourTracker.cpp',BUILDDIR+'Projector.cpp']
     }
 
 # Set up build option parameter
