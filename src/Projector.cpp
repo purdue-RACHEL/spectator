@@ -52,7 +52,7 @@ Projector::Projector(int w, int h){
 	Projector &proj = *this;
         proj.h = h;
         proj.w = w;
-        cv::Mat display(h, w, CV_8UC3, cv::Scalar(255, 255, 255));
+        cv::Mat display(h, w, CV_8UC3, cv::Scalar(0, 0, 0));
         proj.display = display;
 }
 void Projector::drawCenterLine(){	
@@ -92,7 +92,7 @@ int Projector::refresh(){
 	cv::namedWindow("Projector", cv::WND_PROP_FULLSCREEN);
 	cv::setWindowProperty("Projector", cv::WND_PROP_FULLSCREEN, cv::WINDOW_NORMAL);	
 	cv::imshow("Projector", proj.display);
-	proj.display = cv::Mat(proj.h, proj.w, CV_8UC3, cv::Scalar(255, 255, 255));
+	proj.display = cv::Mat(proj.h, proj.w, CV_8UC3, cv::Scalar(0, 0, 0));
 	if (cv::waitKey(33) == 27) return 1;
 	return 0;
 
