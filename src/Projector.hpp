@@ -15,7 +15,6 @@ class Projector{
 	void writeRotateText(std::string &text, float size, int x, int y, int r, int g, int b, int degrees);
 	void drawCenterLine();
         void renderTiff(std::string& fname, int xOff, int yOff, float scale);
-    private:
         int h,w;
         cv::Mat display;
 };

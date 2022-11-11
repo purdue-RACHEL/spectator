@@ -4,7 +4,7 @@
 
 #ifdef TESTTABLE
 int main(int argc, char ** argv){
-    Projector proj = Projector(1024,768);
+    Projector proj = Projector(1536,768);
 	CameraInterface cam = CameraInterface();
 	ColorTracker colTrack = ColorTracker();
     ContourTracker conTrack = ContourTracker();
@@ -13,13 +13,17 @@ int main(int argc, char ** argv){
     for(;;){
         cv::Point2f curPos = table.getNormalizedCoords();
         std::cout << curPos << std::endl; 
-        proj.renderSquare(curPos.x,curPos.y,3,3,0,0,0);
+	cv::Point2f projPos;
+	projPos.x = curPos.x * proj.w;
+	projPos.y = curPos.y * proj.h;
+	cv::circle(proj.display,projPos, 20, cv::Scalar(225,225,225), 4);
 		if(proj.refresh()) break;
         if (cv::waitKey(33) == 27) break;
     }
     return EXIT_SUCCESS;
 }
 #endif
+
 Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack){
     cam = cam;
     colTrack = colTrack;
@@ -31,7 +35,7 @@ void Table::setTableBorder(){
     table.bottom_right = setPointGUI("SET BOTTOM RIGHT CORNER");
 
 }
-cv::Point Table::setPointGUI(const char * windowName){
+cv::Point2f Table::setPointGUI(const char * windowName){
     Table &table = *this;
 	cv::Point2f curr_point = cv::Point2f(0,0);
 	for(;;){
@@ -68,16 +72,16 @@ cv::Point2f Table::getNormalizedCoords(){
        return cv::Point2f(-1,-1); 
     }
     cv::Point2f retPos;
-    retPos.x = (2 * currPos.x) / (table.bottom_right.x - table.top_left.x);
-    retPos.y = currPos.y / (table.bottom_right.y - table.top_left.y);
+    retPos.x = (currPos.x - table.top_left.x) / (table.bottom_right.x - table.top_left.x);
+    retPos.y = 1- (currPos.y - table.top_left.y) / (table.bottom_right.y - table.top_left.y);
     #ifdef TESTTABLE
         cv::Mat in = cam.readColor();
         cv::circle(in, table.top_left, 3, cv::Scalar(0,0,225), -1); 
         cv::circle(in, table.bottom_right, 3, cv::Scalar(0,0,225), -1); 
-        cv::circle(in, retPos, 3, cv::Scalar(0,225,225), -1); 
+        cv::circle(in, currPos, 3, cv::Scalar(0,225,225), -1); 
         cv::imshow("Table and Ball", in);
     #endif
-    return currPos;
+    return retPos;
 }
 
 cv::Point2f Table::getBallCoords(){
@@ -87,12 +91,5 @@ cv::Point2f Table::getBallCoords(){
 	bin = table.colTrack.filterImage(in, 164, 89, 175, 22, 255, 255);
         table.conTrack.findContours(bin);
     cv::Point ballCenter = table.conTrack.findBallCenter();
-    #ifdef TESTTABLE
-        cv::Mat cons = table.conTrack.drawContours(in.rows, in.cols);
-        cv::imshow("orig", in);
-        cv::imshow("filtered", bin);
-        cv::circle(cons, table.top_left, 3, cv::Scalar(0,0,225), -1);
-        cv::imshow("contours", cons);
-    #endif
     return ballCenter;
 }

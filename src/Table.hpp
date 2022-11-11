@@ -18,7 +18,7 @@ class Table{
         cv::Point2f bottom_right; 
 
         Table(CameraInterface&, ColorTracker&, ContourTracker&);
-        cv::Point setPointGUI(const char *);
+        cv::Point2f setPointGUI(const char *);
         void setTableBorder();
 	cv::Point2f getNormalizedCoords();
 	cv::Point2f getBallCoords();	

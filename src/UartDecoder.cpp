@@ -19,13 +19,17 @@ int main(int argc, char ** argv){
         cout << "Problem Setting Up Serial Port" << endl;
         return 1;
     }
+
     int messagei = 0;
     for(;;){
         uart.readSerial();
-	printf("New Message %d\n",messagei);
-        printf("Current Button: %d\n", uart.getButton());
-        printf("Current Bounce: %d\n", uart.getBounce());
-	messagei++;
+	printf("Pre-read.\n");
+	if(uart.getButton() != -1) {
+		printf("New Message %d\n",messagei);
+		printf("Current Button: %d\n", uart.getButton());
+		printf("Current Bounce: %d\n", uart.getBounce());
+		messagei++;
+	}
     }
 
 
@@ -110,12 +114,15 @@ enum Button UartDecoder::getButton(){
 int UartDecoder::readSerial(){
     UartDecoder& decoder = *this;
     char send_buf = REQUEST_DATA;
+
     write(decoder.serial_port, &send_buf, sizeof(send_buf));
     char read_buf;
     int n = read(decoder.serial_port, &read_buf, sizeof(read_buf));
     if(n ==0 ){
         return 1;
     }
+
+    printf("MESSAGE SENT -- int(%d) :: char(%c)\n", read_buf, read_buff);
     if(decoder.decode(read_buf)){
         return 1;
     }
