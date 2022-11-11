@@ -23,7 +23,7 @@ int main(int argc, char ** argv){
     int messagei = 0;
     for(;;){
         uart.readSerial();
-	printf("Pre-read.\n");
+	//printf("Pre-read.\n");
 	if(uart.getButton() != -1) {
 		printf("New Message %d\n",messagei);
 		printf("Current Button: %d\n", uart.getButton());
@@ -50,7 +50,7 @@ UartDecoder::UartDecoder(string& deviceName){
     tty.c_lflag &= ~ICANON; // Don't wait for \n
     tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
     // Change VTIME and VMIN to adjust main behavior
-    tty.c_cc[VTIME] = 0; // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
+    tty.c_cc[VTIME] = 10; // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
     tty.c_cc[VMIN] = 1;
     cfsetispeed(&tty, B115200);
     cfsetospeed(&tty, B115200);
@@ -122,7 +122,7 @@ int UartDecoder::readSerial(){
         return 1;
     }
 
-    printf("MESSAGE SENT -- int(%d) :: char(%c)\n", read_buf, read_buff);
+    //printf("MESSAGE RECIEVED -- int(%d) :: char(%c)\n", read_buf, read_buf);
     if(decoder.decode(read_buf)){
         return 1;
     }

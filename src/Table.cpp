@@ -1,5 +1,6 @@
 #include "Table.hpp"
 #include "Projector.hpp"
+#include "UartDecoder.hpp"
 #include <string>
 
 #ifdef TESTTABLE
@@ -10,14 +11,25 @@ int main(int argc, char ** argv){
     ContourTracker conTrack = ContourTracker();
     Table table = Table(cam, colTrack, conTrack);
     table.setTableBorder();
+	//Uart Setup
+	string deviceStr = "/dev/ttyUSB0";
+        UartDecoder uart = UartDecoder(deviceStr);
+    	if(uart.serial_port == 0){
+        	cout << "Problem Setting Up Serial Port" << endl;
+        	return 1;
+    	}
+
     for(;;){
-        cv::Point2f curPos = table.getNormalizedCoords();
-        std::cout << curPos << std::endl; 
-	cv::Point2f projPos;
-	projPos.x = curPos.x * proj.w;
-	projPos.y = curPos.y * proj.h;
-	cv::circle(proj.display,projPos, 20, cv::Scalar(225,225,225), 4);
+        uart.readSerial();
+	if(uart.getBounce() == RED || uart.getBounce() == BLUE){
+        	cv::Point2f curPos = table.getNormalizedCoords();
+        	std::cout << curPos << std::endl; 
+		cv::Point2f projPos;
+		projPos.x = curPos.x * proj.w;
+		projPos.y = curPos.y * proj.h;
+		cv::circle(proj.display,projPos, 20, cv::Scalar(225,225,225), 4);
 		if(proj.refresh()) break;
+	}
         if (cv::waitKey(33) == 27) break;
     }
     return EXIT_SUCCESS;
