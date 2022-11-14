@@ -10,8 +10,8 @@ BUILDDIR='/home/rachel/git/spectator/build/'
 SRCDIR='/home/rachel/git/spectator/src/'
 
 # Set up enivronment
-env = Environment(CCFLAGS='-fpermissive -I/home/rachel/git/spectator/inc/OpenNI2/Include -I/usr/local/include/opencv4', 
-        LIBS=['tiff', 'OpenNI2', 'opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_highgui', 'opencv_video', 'opencv_imgproc', 'opencv_videoio', 'opencv_optflow'], LIBPATH=['/home/rachel/git/spectator', '/usr/local/lib'],ENV = os.environ)
+env = Environment(CCFLAGS='-fpermissive -std=c++14 -I/home/rachel/git/spectator/inc/OpenNI2/Include -I/usr/local/include/opencv4', 
+        LIBS=['pthread', 'tiff', 'OpenNI2', 'opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_highgui', 'opencv_video', 'opencv_imgproc', 'opencv_videoio', 'opencv_optflow'], LIBPATH=['/home/rachel/git/spectator', '/usr/local/lib'],ENV = os.environ)
 
 # Define build options
 BUILDOPTS = ['GameLoop', 'Uart', 'Camera', 'Projector', 'ColorPicker', 'BuildTest', 'Table']

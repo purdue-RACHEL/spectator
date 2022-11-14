@@ -10,8 +10,13 @@ int main(int argc, char ** argv){
 	CameraInterface cam = CameraInterface();
 	ColorTracker colTrack = ColorTracker();
     ContourTracker conTrack = ContourTracker();
-    Table table = Table(cam, colTrack, conTrack);
+    Table table = Table(cam, colTrack, conTrack, 4);
     table.setTableBorder();
+    table.startDetection();
+    for(;;){
+        if (cv::waitKey(33) == 27) break;
+	std::cout << "(" << table.lastBallPos.x << ", " << table.lastBallPos.y << ")" << std::endl;
+    }
 	//Uart Setup
     /*
     std::string deviceStr = "/dev/ttyUSB0";
@@ -41,24 +46,29 @@ int main(int argc, char ** argv){
 
 
 
-Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack, int sampleFreq){
-    cam = cam;
-    colTrack = colTrack;
-    conTrack = conTrack;
-    samplerThread(this->detectionThread,sampleFreq);
+Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack, int sampleFreq) : 
+  cam(cam),
+  colTrack(colTrack),
+  conTrack(conTrack),
+  sampleFreq(sampleFreq) {
+	  lastBallPos = cv::Point2f(-1,-1);
 }
-void Table::detectionThread(int freq){
-    std::chrono::miliseconds time_offset = 1000/freq;
-    std::chrono::miliseconds lastSample;
-    std::chrono::miliseconds currSample;
+void Table::detectionThread(){
+    Table &table = *this;
+    std::chrono::milliseconds time_offset = std::chrono::milliseconds(1000/table.sampleFreq);
+    std::chrono::milliseconds lastSample;
+    lastSample = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+    std::chrono::milliseconds currSample;
     for(;;){
-        currSample = std::chrono::duration_cast<std::chrono::miliseconds>std::chrono::system_clock::now().time_since_epoch();
-        if(lastSample - currSample >= time_offset){
+        currSample = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+        if(currSample - lastSample >= time_offset){
             lastSample = currSample;
-            std::cout << "sampled" << std::endl;
+            table.lastBallPos = table.getNormalizedCoords();
         }
     }
-
+}
+void Table::startDetection(){
+  samplerThread = std::thread(&Table::detectionThread,this);  
 }
 void Table::setTableBorder(){
     Table &table = *this;

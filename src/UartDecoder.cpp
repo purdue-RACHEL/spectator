@@ -24,7 +24,7 @@ int main(int argc, char ** argv){
     for(;;){
         uart.readSerial();
 	//printf("Pre-read.\n");
-	if(uart.getButton() != -1) {
+	if(uart.getButton() != -1 || uart.getBounce() != -1) {
 		printf("New Message %d\n",messagei);
 		printf("Current Button: %d\n", uart.getButton());
 		printf("Current Bounce: %d\n", uart.getBounce());
