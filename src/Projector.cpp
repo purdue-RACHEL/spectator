@@ -59,11 +59,13 @@ void Projector::drawCenterLine(){
 	Projector &proj = *this;
 	proj.renderSquare(1920/2 - 8,0,16,1080,0,0,1);
 }
+/*
 void Projector::drawLine(int x1, int y1, int x2, int y2, int width){
 	Projector &proj = *this;
 	proj.renderSquare(x1 - width/2, y1 - width/2, 
 
 }	
+*/
 void Projector::renderSquare(int x, int y, int w, int h, int r, int g, int b){
 	Projector &proj = *this;
 	if((y<0) || (x<0)){

@@ -46,12 +46,17 @@ int main()
 
         bounce = uart.getBounce();
         button = uart.getButton();
+	if(button != NOPRESS){
+		std::cout << "Button Pressed: " << button << std::endl;
+	}
 
         // TODO: keep in mind, we may have short circuiting here......
         if((handleBounce(bounce) == SCORE_CHANGE) || (handleButton(button) == SCORE_CHANGE)) {
             // debug
-            std::cout << "red score: " << score_red << std::endl;
+	    	/*
+            	std::cout << "red score: " << score_red << std::endl;
 	        std::cout << "blue score: " << score_blue << std::endl;
+		*/
 
             // TODO: project updates
 #ifndef DISABLEOPENCV

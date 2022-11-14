@@ -12,10 +12,10 @@ int main(int argc, char ** argv){
     Table table = Table(cam, colTrack, conTrack);
     table.setTableBorder();
 	//Uart Setup
-	string deviceStr = "/dev/ttyUSB0";
+    std::string deviceStr = "/dev/ttyUSB0";
         UartDecoder uart = UartDecoder(deviceStr);
     	if(uart.serial_port == 0){
-        	cout << "Problem Setting Up Serial Port" << endl;
+		std::cout << "Problem Setting Up Serial Port" << std::endl;
         	return 1;
     	}
 
