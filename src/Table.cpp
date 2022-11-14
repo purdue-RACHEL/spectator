@@ -2,6 +2,7 @@
 #include "Projector.hpp"
 #include "UartDecoder.hpp"
 #include <string>
+#include <chrono>
 
 #ifdef TESTTABLE
 int main(int argc, char ** argv){
@@ -12,6 +13,7 @@ int main(int argc, char ** argv){
     Table table = Table(cam, colTrack, conTrack);
     table.setTableBorder();
 	//Uart Setup
+    /*
     std::string deviceStr = "/dev/ttyUSB0";
         UartDecoder uart = UartDecoder(deviceStr);
     	if(uart.serial_port == 0){
@@ -33,13 +35,30 @@ int main(int argc, char ** argv){
         if (cv::waitKey(33) == 27) break;
     }
     return EXIT_SUCCESS;
+    */
 }
 #endif
 
-Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack){
+
+
+Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack, int sampleFreq){
     cam = cam;
     colTrack = colTrack;
     conTrack = conTrack;
+    samplerThread(this->detectionThread,sampleFreq);
+}
+void Table::detectionThread(int freq){
+    std::chrono::miliseconds time_offset = 1000/freq;
+    std::chrono::miliseconds lastSample;
+    std::chrono::miliseconds currSample;
+    for(;;){
+        currSample = std::chrono::duration_cast<std::chrono::miliseconds>std::chrono::system_clock::now().time_since_epoch();
+        if(lastSample - currSample >= time_offset){
+            lastSample = currSample;
+            std::cout << "sampled" << std::endl;
+        }
+    }
+
 }
 void Table::setTableBorder(){
     Table &table = *this;

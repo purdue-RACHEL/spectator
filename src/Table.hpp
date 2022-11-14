@@ -8,6 +8,7 @@
 #include <opencv2/optflow.hpp>
 #include <opencv2/video.hpp>
 #include <vector>
+#include <thread>
 
 class Table{
     public:
@@ -16,12 +17,14 @@ class Table{
         ContourTracker conTrack;
         cv::Point2f top_left;
         cv::Point2f bottom_right; 
+        std::thread samplerThread;
 
-        Table(CameraInterface&, ColorTracker&, ContourTracker&);
+        Table(CameraInterface&, ColorTracker&, ContourTracker&, int);
         cv::Point2f setPointGUI(const char *);
         void setTableBorder();
 	cv::Point2f getNormalizedCoords();
 	cv::Point2f getBallCoords();	
+    void Table::detectionThread(int freq);
 
 
 };
