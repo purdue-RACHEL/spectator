@@ -10,11 +10,13 @@ int main(int argc, char ** argv){
 	CameraInterface cam = CameraInterface();
 	ColorTracker colTrack = ColorTracker();
     ContourTracker conTrack = ContourTracker();
-    Table table = Table(cam, colTrack, conTrack, 4);
+    Table table = Table(cam, colTrack, conTrack, 10);
     table.setTableBorder();
     table.startDetection();
     for(;;){
-        if (cv::waitKey(33) == 27) break;
+        if (cv::waitKey(33) == 27){
+		table.stopDetection();
+	}
 	std::cout << "(" << table.lastBallPos.x << ", " << table.lastBallPos.y << ")" << std::endl;
     }
 	//Uart Setup
@@ -52,6 +54,7 @@ Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & co
   conTrack(conTrack),
   sampleFreq(sampleFreq) {
 	  lastBallPos = cv::Point2f(-1,-1);
+	  stopSample = FALSE;
 }
 void Table::detectionThread(){
     Table &table = *this;
@@ -61,6 +64,8 @@ void Table::detectionThread(){
     std::chrono::milliseconds currSample;
     for(;;){
         currSample = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+	if(stopSample)
+	    return;
         if(currSample - lastSample >= time_offset){
             lastSample = currSample;
             table.lastBallPos = table.getNormalizedCoords();
@@ -69,6 +74,9 @@ void Table::detectionThread(){
 }
 void Table::startDetection(){
   samplerThread = std::thread(&Table::detectionThread,this);  
+}
+void Table::stopDetection(){
+  this->stopSample = TRUE;
 }
 void Table::setTableBorder(){
     Table &table = *this;

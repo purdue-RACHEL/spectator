@@ -21,6 +21,7 @@ class Table{
 	cv::Point2f lastBallPos;
         std::thread samplerThread;
 	int sampleFreq;
+	bool stopSample;
 
         Table(CameraInterface&, ColorTracker&, ContourTracker&, int);
         cv::Point2f setPointGUI(const char *);
@@ -29,6 +30,7 @@ class Table{
 	cv::Point2f getBallCoords();	
     	void detectionThread();
 	void startDetection();
+	void stopDetection();
 
 
 };
