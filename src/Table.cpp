@@ -7,42 +7,49 @@
 #ifdef TESTTABLE
 int main(int argc, char ** argv){
     Projector proj = Projector(1536,768);
-	CameraInterface cam = CameraInterface();
-	ColorTracker colTrack = ColorTracker();
+    CameraInterface cam = CameraInterface();
+    ColorTracker colTrack = ColorTracker();
     ContourTracker conTrack = ContourTracker();
     Table table = Table(cam, colTrack, conTrack, 10);
-    table.setTableBorder();
-    table.startDetection();
-    for(;;){
-        if (cv::waitKey(33) == 27){
-		table.stopDetection();
-	}
-	std::cout << "(" << table.lastBallPos.x << ", " << table.lastBallPos.y << ")" << std::endl;
-    }
-	//Uart Setup
     /*
     std::string deviceStr = "/dev/ttyUSB0";
-        UartDecoder uart = UartDecoder(deviceStr);
-    	if(uart.serial_port == 0){
-		std::cout << "Problem Setting Up Serial Port" << std::endl;
-        	return 1;
-    	}
-
+    UartDecoder uart = UartDecoder(deviceStr);
+    if(uart.serial_port == 0){
+        std::cout << "Problem Setting Up Serial Port" << std::endl;
+        return 1;
+    }
+    */
+    table.setTableBorder();
+    table.startDetection();
+    cv::Point2f currBounce = cv::Point2f(0,0);
     for(;;){
+	/*
         uart.readSerial();
 	if(uart.getBounce() == RED || uart.getBounce() == BLUE){
-        	cv::Point2f curPos = table.getNormalizedCoords();
-        	std::cout << curPos << std::endl; 
-		cv::Point2f projPos;
-		projPos.x = curPos.x * proj.w;
-		projPos.y = curPos.y * proj.h;
-		cv::circle(proj.display,projPos, 20, cv::Scalar(225,225,225), 4);
-		if(proj.refresh()) break;
+	    std::cout << uart.last_time << std::endl;
+	    std::cout << uart.curr_time << std::endl;
 	}
-        if (cv::waitKey(33) == 27) break;
+	*/
+        if (cv::waitKey(33) == 27){
+	    table.stopDetection();
+	    break;
+	}
+	if( cv::waitKey(33) == 'b'){
+	    std::cout << "Bounce" << std::endl;
+    	    int currTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	    currBounce = table.getAveragedPos(currTime - 1000, currTime);
+	    //std::cout << currBounce.x << " " << currBounce.y << std::endl;
+	    std::cout << currTime << " " << currTime + 1000 << std::endl;
+	}
+	//std::cout << "(" << table.bounceList.front().loc.x << ", " << table.bounceList.front().loc.y << ") time: " << table.bounceList.front().time << std::endl;
+	//std::cout << table.bounceListI << std::endl;
+	cv::Point2f projPos;
+	projPos.x = currBounce.x * proj.w;
+	projPos.y = currBounce.y * proj.h;
+	cv::circle(proj.display,projPos, 20, cv::Scalar(225,225,225), 4);
+	if(proj.refresh()) break;
     }
     return EXIT_SUCCESS;
-    */
 }
 #endif
 
@@ -53,8 +60,9 @@ Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & co
   colTrack(colTrack),
   conTrack(conTrack),
   sampleFreq(sampleFreq) {
-	  lastBallPos = cv::Point2f(-1,-1);
-	  stopSample = FALSE;
+    lastBallPos = cv::Point2f(-1,-1);
+    stopSample = FALSE;
+    bounceListI = 0;
 }
 void Table::detectionThread(){
     Table &table = *this;
@@ -68,9 +76,36 @@ void Table::detectionThread(){
 	    return;
         if(currSample - lastSample >= time_offset){
             lastSample = currSample;
-            table.lastBallPos = table.getNormalizedCoords();
+            BounceStore currBallPos = BounceStore(table.getNormalizedCoords(),currSample.count());
+	    if(currBallPos.loc.x < 0){
+		continue;	
+	    }
+	    table.bounceListI++;
+	    table.bounceList.push_front(currBallPos);
         }
     }
+}
+cv::Point2f Table::getAveragedPos(int startTime, int stopTime){
+    Table &table = *this;
+    float xSum = 0;
+    float ySum = 0;
+    int nSamples = 0;
+    std::list<BounceStore>::iterator it;
+    for (it = table.bounceList.begin(); it != table.bounceList.end(); it++){
+	std::cout << it->time << std::endl;
+	if(it->time > stopTime)
+
+	if(it->time < startTime)
+	    break;
+	std::cout << it->loc.x << std::endl;
+	xSum += it->loc.x;
+	ySum += it->loc.y;
+	nSamples++;
+    }
+    if(nSamples == 0){
+	return cv::Point2f(-1,-1);
+    }
+    return cv::Point2f(xSum/nSamples, ySum/nSamples);
 }
 void Table::startDetection(){
   samplerThread = std::thread(&Table::detectionThread,this);  
@@ -123,6 +158,7 @@ cv::Point2f Table::getNormalizedCoords(){
     cv::Point2f retPos;
     retPos.x = (currPos.x - table.top_left.x) / (table.bottom_right.x - table.top_left.x);
     retPos.y = 1- (currPos.y - table.top_left.y) / (table.bottom_right.y - table.top_left.y);
+    /*
     #ifdef TESTTABLE
         cv::Mat in = cam.readColor();
         cv::circle(in, table.top_left, 3, cv::Scalar(0,0,225), -1); 
@@ -130,6 +166,7 @@ cv::Point2f Table::getNormalizedCoords(){
         cv::circle(in, currPos, 3, cv::Scalar(0,225,225), -1); 
         cv::imshow("Table and Ball", in);
     #endif
+    */
     return retPos;
 }
 
@@ -141,4 +178,9 @@ cv::Point2f Table::getBallCoords(){
         table.conTrack.findContours(bin);
     cv::Point ballCenter = table.conTrack.findBallCenter();
     return ballCenter;
+}
+
+BounceStore::BounceStore(cv::Point2f loc, int time):
+loc(loc),
+time(time){
 }

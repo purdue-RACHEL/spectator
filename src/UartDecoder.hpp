@@ -56,6 +56,12 @@ class UartDecoder {
 		int curr_bounce;
 		int curr_press;
 		int serial_port;
+		//Time of last uart read
+		//Miliseconds past the epoch
+		int last_time;
+		//Time of current uart read
+		//Miliseconds past the epoch
+		int curr_time;
 
 // Functions
 UartDecoder(std::string&);

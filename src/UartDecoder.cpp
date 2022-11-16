@@ -6,6 +6,7 @@
 #include <string>
 #include <termios.h>
 #include <unistd.h>
+#include <chrono>
 
 #include "UartDecoder.hpp"
 
@@ -72,6 +73,8 @@ UartDecoder::UartDecoder(string& deviceName){
         printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
         return;
     }
+    curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    last_time = curr_time;
 }
 
 // DECODE MESSAGE AND SET GLOBAL VARIABLES
@@ -118,9 +121,11 @@ int UartDecoder::readSerial(){
     write(decoder.serial_port, &send_buf, sizeof(send_buf));
     char read_buf;
     int n = read(decoder.serial_port, &read_buf, sizeof(read_buf));
-    if(n ==0 ){
+    if(n == 0){
         return 1;
     }
+    decoder.last_time = decoder.curr_time;
+    decoder.curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
     //printf("MESSAGE RECIEVED -- int(%d) :: char(%c)\n", read_buf, read_buf);
     if(decoder.decode(read_buf)){
