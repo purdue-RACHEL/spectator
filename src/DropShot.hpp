@@ -21,10 +21,11 @@ typedef struct Game_Preferences_t {
 
 // Enum Declarations
 enum GameStatus {
-    STARTUP,
-    ACTIVE,
-    GAMEOVER,
-    SHUTDOWN
+    STARTUP  = 0,   //INIT
+    ACTIVE   = 1,   //MID-GAME
+    GAMEOVER = 2,   //POST-GAME
+    EXITGAME = 3,   //EXIT TO MAIN MENU
+    SHUTDOWN = -1   //TURN OFF
 };
 
 enum StatusChange {

@@ -16,14 +16,15 @@ GameStatus gameStatus = STARTUP;
 Game_Preferences_t game_preferences;
 bool menuIsHidden = true;         //<----------------------- HAVE SOMETHING LIKE THIS
 
-// GIVE PARAM MAX SCORE WHEN CALLED FROM MAIN MENU
+// GIVE PARAM: UARTDECODER WHEN CALLED FROM MAIN MENU
+//int main(UartDecoder uart)
 int main()
 {
     Bounce bounce = NOBOUNCE;
     Button button = NOPRESS;
 
     std::string deviceStr = "/dev/ttyUSB0";
-	UartDecoder uart = UartDecoder(deviceStr);
+	UartDecoder uart = UartDecoder(deviceStr); // REMOVE AFTER NEW MAIN PARAM GET ADDED
 #ifndef DISABLEOPENCV
 	Projector proj(1920,1080);
 #endif
@@ -31,49 +32,55 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
     auto target = start;
 
+    while(gameStatus == STARTUP) { 
+        std::this_thread::sleep_until(target);
+        target += std::chrono::milliseconds(UART_POLL_MS);
+        handleButton(uart.getButton()); 
+    }
 
-    // TODO: WAIT FOR START GAME
-    while(gameStatus == STARTUP) { handleButton(uart.getButton()); }
-
-    while(gameStatus == ACTIVE) {
+    while(gameStatus == ACTIVE || gameStatus == GAMEOVER) {
 
         // TODO: protection logic.
         // if we happen to take 35 ms to process, there is no point for the sleep
         // perhaps we skip the sleep
         std::this_thread::sleep_until(target);
         target += std::chrono::milliseconds(UART_POLL_MS);
-
         uart.readSerial();
-
 
         bounce = uart.getBounce();
         button = uart.getButton();
+        StatusChange bounceEvent = uart.getBounce();
+        StatusChange buttonEvent = uart.getButton();
 
         // TODO: keep in mind, we may have short circuiting here......
-        if((handleBounce(bounce) == SCORE_CHANGE) || (handleButton(button) == SCORE_CHANGE)) {
+        if((bounceEvent == SCORE_CHANGE) || (buttonEvent == SCORE_CHANGE)) {
             // debug
             std::cout << "red score: " << score_red << std::endl;
 	        std::cout << "blue score: " << score_blue << std::endl;
+            // EVENTUALLY UPDATE SCORE DISPLAY
 
             // TODO: project updates
-#ifndef DISABLEOPENCV
-	    proj.drawCenterLine();
-	    proj.updateScore(score_red,score_blue);
-	    proj.refresh();
-#endif
+            #ifndef DISABLEOPENCV
+                    proj.drawCenterLine();
+                    proj.updateScore(score_red,score_blue);
+                    proj.refresh();
+            #endif
         }
 
-        // TODO: game finish logic - wins, ... mostly to be handled in projecting
+            // TODO: game finish logic - wins, ... mostly to be handled in projecting
         if(score_red >= game_preferences.max_score || score_blue >= game_preferences.max_score) {
-	    std::cout << "Game Over message" << std::endl;
+            gameStatus = GAMEOVER;
+            menuIsHidden = true;
+            std::cout << "Game Over message" << std::endl;
         }
     }
 
-    // shutdown sequence
+    // WITH BIG MAIN FUNCTION - DO NOT CALL THIS PLZ
     uart.writeSerial(FORCE_SHUTDOWN);
     uart.closePort();
+    // REMOVE AFTER BIG MAIN FX
 
-    return -1;
+    return gameStatus;
 }
 
 StatusChange handleBounce(Bounce bounce) {
@@ -172,7 +179,7 @@ StatusChange handleButton(Button button) {
         4 == SCORE BLUE --
         B == SCORE RED --
 
-        * == CONTINUE (GETS RID OF MENU)
+        * == START GAME 
         # == RETURN TO MAIN MENU
         D == EXIT
     */
@@ -204,14 +211,16 @@ StatusChange handleButton(Button button) {
                 else { statusChange = FAILED_SCORE_CHANGE; } break;
             case STAR:
                 menuIsHidden = false;
+                if (gameStatus == STARTUP) { gameStatus = GameStatus.ACTIVE; }
                 statusChange =  MENU_CHANGE; break;
-            case POUND: statusChange = EXIT2MAIN_CHANGE; break;
-            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
-            
-            if(gameStatus == ACTIVE && button == ZERO) {
-                score_red = score_blue = 0;
-                statusChange = RESTART_CHANGE;
-            }
+            case POUND: menuIsHidden = true; gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
+            case D:     menuIsHidden = true; gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
+            case ZERO: 
+                if (gameStatus == ACTIVE) {
+                    score_red = score_blue = 0;
+                    menuIsHidden = true;
+                    statusChange = RESTART_CHANGE;
+                } break;
         }
     /*
         END-MENU (GAMEOVER): *MENU ALWAYS UP* <-----
@@ -224,7 +233,6 @@ StatusChange handleButton(Button button) {
     */
     } else if(gameStatus == GAMEOVER) {
         switch(button) {
-            // I ADDED -1 SCORE :: INCASE ERROR ON LAST POINT
             case FOUR:
                 score_red -= 1; 
                 statusChange = SCORE_CHANGE;
@@ -235,74 +243,16 @@ StatusChange handleButton(Button button) {
                 gameStatus = ACTIVE; break;
             case ZERO:
                 score_red = score_blue = 0;
+                gameStatus = ACTIVE;
                 statusChange = RESTART_CHANGE; break;
-            case POUND: statusChange = EXIT2MAIN_CHANGE; break;
-            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
+            case POUND: menuIsHidden = true; gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
+            case D:     menuIsHidden = true; gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
         }
     }
 
-        /*
-        // OLD CODE MAKE NEW STATES
-        switch(button) {
-            case ONE:
-                if(score_red != SCORE_MAX) {
-                    score_red += 1;
-                    statusChange = SCORE_CHANGE;
-                } else {
-                    statusChange = FAILED_SCORE_CHANGE;
-                }
-                break;
-            case FOUR:
-                if(score_red > 0) {
-                    score_red -= 1;
-                    statusChange = SCORE_CHANGE;
-                } else {
-                    statusChange = FAILED_SCORE_CHANGE;
-                }
-                break;
-            
-            case A:
-                if(score_blue != SCORE_MAX) {
-                    score_blue += 1;
-                    statusChange = SCORE_CHANGE;
-                } else {
-                    statusChange = FAILED_SCORE_CHANGE;
-                }
-                break;
-            case B:
-                if(score_blue > 0) {
-                    score_blue -= 1;
-                    statusChange = SCORE_CHANGE;
-                } else {
-                    statusChange = FAILED_SCORE_CHANGE;
-                }
-                break;
-
-        case TWO:
-            if(game_preferences.max_score > 0)
-            game_preferences.max_score -= 1;
-            break;
-
-        case THREE:
-            if(game_preferences.max_score < SCORE_MAX)
-            game_preferences.max_score += 1;
-            break;
-            // TODO: ^ add gameStatus change n check protection types
-
-            case D:
-                if(previous_button == D)
-                    gameStatus = SHUTDOWN;
-                    statusChange = SHUTDOWN_CHANGE;
-                break;
-        }
-        */
-
-
-    // numbering here is not tied to button numbers, just a counter
-    // 5. reset screen (for gamemodes or sm)
-    // sensitivity change buttons?
-    // tell which side to serve?
-    // ...
+    if (menuIsHidden == false) {
+        // HIDE DA MENU  <---------------------------------------------------------------
+    }
 
     return statusChange;
 }
