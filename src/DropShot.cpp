@@ -160,51 +160,88 @@ StatusChange handleButton(Button button) {
     
     if(menuIsHidden == true)
         menuIsHidden == false;
-        //HAVE PROJECTOR DISPLAY THE CORRESPONDING MENU JACK <----------------------------
+
+        // DISPLAY DA MENU  <---------------------------------------------------------------
+
         return MENU_CHANGE;
-
-
-    // WHAT BUTTONS DO:
     /*
-        START-GAME MENU (GAME):
-            (HANDICAPS)
-            1 == SCORE BLUE ++
-            A == SCORE RED ++
+    START-GAME MENU (GAME):
+        (HANDICAPS)
+        1 == SCORE BLUE ++
+        A == SCORE RED ++
+        4 == SCORE BLUE --
+        B == SCORE RED --
+
+        * == CONTINUE (GETS RID OF MENU)
+        # == RETURN TO MAIN MENU
+        D == EXIT
+    */
+    /*
+    MID-GAME MENU (PAUSE):
+        1 == SCORE BLUE ++
+        A == SCORE RED ++
+        4 == SCORE BLUE --
+        B == SCORE RED --
+
+        * == CONTINUE (GETS RID OF MENU)
+        0 == RESTART
+        # == RETURN TO MAIN MENU
+        D == EXIT
+    */
+    if(gameStatus == STARTUP || gameStatus == ACTIVE) {
+        switch(button) {
+            case ONE:
+                if(score_red != SCORE_MAX) { score_red += 1; statusChange = SCORE_CHANGE; }
+                else { statusChange = FAILED_SCORE_CHANGE; } break;
+            case A:
+                if(score_blue != SCORE_MAX) { score_blue += 1; statusChange = SCORE_CHANGE; }
+                else { statusChange = FAILED_SCORE_CHANGE; } break;
+            case FOUR:
+                if(score_red != 0) { score_red -= 1; statusChange = SCORE_CHANGE; }
+                else { statusChange = FAILED_SCORE_CHANGE; } break;
+            case B:
+                if(score_blue != 0) { score_blue -= 1; statusChange = SCORE_CHANGE; }
+                else { statusChange = FAILED_SCORE_CHANGE; } break;
+            case STAR:
+                menuIsHidden = false;
+                statusChange =  MENU_CHANGE; break;
+            case POUND: statusChange = EXIT2MAIN_CHANGE; break;
+            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
+            
+            if(gameStatus == ACTIVE && button == ZERO) {
+                score_red = score_blue = 0;
+                statusChange = RESTART_CHANGE;
+            }
+        }
+    /*
+        END-MENU (GAMEOVER): *MENU ALWAYS UP* <-----
             4 == SCORE BLUE --
             B == SCORE RED --
 
-            * == CONTINUE (GETS RID OF MENU)
-            # == RETURN TO MAIN MENU
-            D == EXIT
-
-        MID-GAME MENU (PAUSE):
-            1 == SCORE BLUE ++
-            A == SCORE RED ++
-            4 == SCORE BLUE --
-            B == SCORE RED --
-
-            * == CONTINUE (GETS RID OF MENU)
-            0 == RESTART
-            # == RETURN TO MAIN MENU
-            D == EXIT
-        
-        END-MENU (GAMEOVER):
             0 == PLAY AGAIN (RESTART) 
             # == RETURN TO MAIN MENU
             D == EXIT
-
     */
-
-    if(gameState == STARTUP) {
+    } else if(gameStatus == GAMEOVER) {
         switch(button) {
-            case ONE:
-                if()
-
+            // I ADDED -1 SCORE :: INCASE ERROR ON LAST POINT
+            case FOUR:
+                score_red -= 1; 
+                statusChange = SCORE_CHANGE;
+                gameStatus = ACTIVE; break;
+            case B:
+                score_blue -= 1; 
+                statusChange = SCORE_CHANGE;
+                gameStatus = ACTIVE; break;
+            case ZERO:
+                score_red = score_blue = 0;
+                statusChange = RESTART_CHANGE; break;
+            case POUND: statusChange = EXIT2MAIN_CHANGE; break;
+            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
         }
-    } else if(gameState == ACTIVE) {
+    }
 
-
-
+        /*
         // OLD CODE MAKE NEW STATES
         switch(button) {
             case ONE:
@@ -258,7 +295,8 @@ StatusChange handleButton(Button button) {
                     statusChange = SHUTDOWN_CHANGE;
                 break;
         }
-    }
+        */
+
 
     // numbering here is not tied to button numbers, just a counter
     // 5. reset screen (for gamemodes or sm)
