@@ -11,42 +11,35 @@ int main(int argc, char ** argv){
     ColorTracker colTrack = ColorTracker();
     ContourTracker conTrack = ContourTracker();
     Table table = Table(cam, colTrack, conTrack, 10);
-    /*
     std::string deviceStr = "/dev/ttyUSB0";
     UartDecoder uart = UartDecoder(deviceStr);
     if(uart.serial_port == 0){
         std::cout << "Problem Setting Up Serial Port" << std::endl;
         return 1;
     }
-    */
     table.setTableBorder();
     table.startDetection();
     cv::Point2f currBounce = cv::Point2f(0,0);
+    cv::Point2f projPos;
+    cv::Point2f prevProjPos(-1, -1);
     for(;;){
-	/*
         uart.readSerial();
-	if(uart.getBounce() == RED || uart.getBounce() == BLUE){
-	    std::cout << uart.last_time << std::endl;
-	    std::cout << uart.curr_time << std::endl;
-	}
-	*/
         if (cv::waitKey(33) == 27){
 	    table.stopDetection();
 	    break;
 	}
-	if( cv::waitKey(33) == 'b'){
+	if(uart.getBounce() == RED || uart.getBounce() == BLUE){
 	    std::cout << "Bounce" << std::endl;
-    	    int currTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	    currBounce = table.getAveragedPos(currTime - 1000, currTime);
+	    currBounce = table.getAveragedPos(uart.last_time, uart.curr_time);
 	    //std::cout << currBounce.x << " " << currBounce.y << std::endl;
-	    std::cout << currTime << " " << currTime + 1000 << std::endl;
 	}
 	//std::cout << "(" << table.bounceList.front().loc.x << ", " << table.bounceList.front().loc.y << ") time: " << table.bounceList.front().time << std::endl;
 	//std::cout << table.bounceListI << std::endl;
-	cv::Point2f projPos;
 	projPos.x = currBounce.x * proj.w;
 	projPos.y = currBounce.y * proj.h;
 	cv::circle(proj.display,projPos, 20, cv::Scalar(225,225,225), 4);
+	proj.drawLine(prevProjPos, projPos, 5, cv::Scalar(255, 127, 255));
+	prevProjPos = projPos;
 	if(proj.refresh()) break;
     }
     return EXIT_SUCCESS;
@@ -91,13 +84,14 @@ cv::Point2f Table::getAveragedPos(int startTime, int stopTime){
     float ySum = 0;
     int nSamples = 0;
     std::list<BounceStore>::iterator it;
+    std::cout << startTime << " to " << stopTime << std::endl;
     for (it = table.bounceList.begin(); it != table.bounceList.end(); it++){
-	std::cout << it->time << std::endl;
+	//std::cout << it->time << std::endl;
 	if(it->time > stopTime)
-
+	    continue;
 	if(it->time < startTime)
 	    break;
-	std::cout << it->loc.x << std::endl;
+	//std::cout << it->loc.x << std::endl;
 	xSum += it->loc.x;
 	ySum += it->loc.y;
 	nSamples++;
@@ -117,11 +111,15 @@ void Table::setTableBorder(){
     Table &table = *this;
     table.top_left = setPointGUI("SET TOP LEFT CORNER");
     table.bottom_right = setPointGUI("SET BOTTOM RIGHT CORNER");
-
+    /*
+    table.top_left = cv::Point2f(70, 120);
+    table.bottom_right = cv::Point2f(240, 212);
+    */
+    std::cout << table.top_left << table.bottom_right << std::endl;
 }
 cv::Point2f Table::setPointGUI(const char * windowName){
     Table &table = *this;
-	cv::Point2f curr_point = cv::Point2f(0,0);
+	cv::Point2f curr_point = cv::Point2f(70,120);
 	for(;;){
 		cv::Mat in = table.cam.readColor();
 		cv::circle(in, curr_point, 3, cv::Scalar(0,0,225), -1);

@@ -16,7 +16,7 @@ class BounceStore {
     public:
 	BounceStore(cv::Point2f,int);
         cv::Point2f loc;
-        int time;
+        unsigned int time;
 };
 
 class Table{

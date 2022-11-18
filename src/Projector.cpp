@@ -59,13 +59,14 @@ void Projector::drawCenterLine(){
 	Projector &proj = *this;
 	proj.renderSquare(1920/2 - 8,0,16,1080,0,0,1);
 }
-/*
-void Projector::drawLine(int x1, int y1, int x2, int y2, int width){
+void Projector::putPixel(int x, int y, cv::Vec3b color) {
 	Projector &proj = *this;
-	proj.renderSquare(x1 - width/2, y1 - width/2, 
-
+	//proj.displ
+}
+void Projector::drawLine(cv::Point2f p1, cv::Point2f p2, int width, cv::Scalar color){
+	Projector &proj = *this;
+	cv::line(proj.display, p1, p2, color, width);
 }	
-*/
 void Projector::renderSquare(int x, int y, int w, int h, int r, int g, int b){
 	Projector &proj = *this;
 	if((y<0) || (x<0)){
@@ -94,30 +95,75 @@ void Projector::renderSquare(int x, int y, int w, int h, int r, int g, int b){
 		}
 	}	
 }
+
+void Projector::renderSquare(int x, int y, int w, int h, cv::Vec3b color){
+	Projector &proj = *this;
+	if((y<0) || (x<0)){
+		return;
+	}
+        if((x > proj.w) || (y > proj.h)){
+            	return;
+	}
+	if(x < 0){
+		w = w + x;
+		x = 0;
+	}
+	if(y < 0){
+		h = h + y;
+		y = 0;
+	}
+	if(x + w >=  proj.w){
+		w = proj.w - x - 1;	
+	}
+	if(y + h >=  proj.h){
+		h = proj.h - y - 1;	
+	}
+	for(int u = x;u<x+w;u++){
+		for(int v = y; v< y + h;v++){
+			proj.display.at<cv::Vec3b>(v,u) = color;
+		}
+	}	
+}
+
+//r is the perpendicular distance from (x, y) to each side of the regular polygon
+void Projector::renderRegularPolygon(int x, int y, int r, int n, cv::Vec3b color) {
+	if (n == 4) renderSquare(x - r, y - r, 2 * r, 2 * r, color);
+	else {
+		
+	}
+}
+
 int Projector::refresh(){
 	Projector &proj = *this;
 	cv::namedWindow("Projector", cv::WND_PROP_FULLSCREEN);
 	cv::setWindowProperty("Projector", cv::WND_PROP_FULLSCREEN, cv::WINDOW_NORMAL);	
 	cv::imshow("Projector", proj.display);
-	proj.display = cv::Mat(proj.h, proj.w, CV_8UC3, cv::Scalar(0, 0, 0));
+	//proj.display = cv::Mat(proj.h, proj.w, CV_8UC3, cv::Scalar(0, 0, 0));
 	if (cv::waitKey(33) == 27) return 1;
 	return 0;
 
 }
+
 void Projector::writeText(std::string& text, float  size, int x, int y, int r, int g, int b){
 	Projector &proj = *this;
 	cv::putText(proj.display, text, cv::Point(x,y),
 			cv::FONT_HERSHEY_SIMPLEX, size, cv::Scalar(r,g,b), 20, CV_8UC3);
 }
-void Projector::updateScore(int scoreRed, int scoreBlue){
+
+void Projector::updateScore(int scoreRed, int scoreBlue) {
 	Projector &proj = *this;
 	std::string redText = std::to_string(scoreRed);
 	std::string blueText = std::to_string(scoreBlue);
 	writeRotateText(blueText,5,proj.w/2 + 150,proj.h-20,0,0,255,270);
 	writeRotateText(redText,5,proj.w/2 - 150, 20, 255,0,0,90);
 }
-void Projector::writeRotateText(std::string& text, float size, int x, int y, int r, int g, int b, int angle)
-{
+
+//Pulled logic out into separate function so that an arbitrary font can be used if needed -JH
+void Projector::writeRotateText(const std::string& text, float size, int x, int y, int r, int g, int b, int angle) {
+	writeRotateTextFont(text, size, x, y, r, g, b, angle, cv::FONT_HERSHEY_SIMPLEX);
+}
+
+void Projector::writeRotateTextFont(const std::string& text, float size, int x, int y, int r, int g, int b, int angle, int cvfont) {
 	Projector &proj = *this;
 	//Black Backdrop
 	//cv::Mat rotImage = cv::Mat::zeros(proj.display.cols, proj.display.rows, proj.display.type());
@@ -125,13 +171,13 @@ void Projector::writeRotateText(std::string& text, float size, int x, int y, int
 	cv::Mat rotImage = cv::Mat(proj.display.cols, proj.display.rows, CV_8UC3, cv::Scalar(255, 255, 255));
 	if(angle == 270){
 		cv::putText(rotImage, text, cv::Point(proj.h - y,x),
-			cv::FONT_HERSHEY_SIMPLEX, size, cv::Scalar(b,g,r), 20, CV_8UC3);
+			cvfont, size, cv::Scalar(b,g,r), 20, CV_8UC3);
 		cv::transpose(rotImage,rotImage);
 		cv::flip(rotImage,rotImage,0);
 	}
 	else if(angle == 90){
 		cv::putText(rotImage, text, cv::Point(y,proj.w - x),
-			cv::FONT_HERSHEY_SIMPLEX, size, cv::Scalar(b,g,r), 20, CV_8UC3);
+			cvfont, size, cv::Scalar(b,g,r), 20, CV_8UC3);
 		cv::transpose(rotImage,rotImage);
 		cv::flip(rotImage,rotImage,1);
 	}

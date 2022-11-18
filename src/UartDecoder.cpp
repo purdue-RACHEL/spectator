@@ -73,7 +73,7 @@ UartDecoder::UartDecoder(string& deviceName){
         printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
         return;
     }
-    curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    curr_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
     last_time = curr_time;
 }
 

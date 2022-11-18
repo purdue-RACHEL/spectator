@@ -84,7 +84,7 @@ if CLEAN:
     env.Command(source=None, target=None, action='rm -rf '+BUILDDIR+'/*')
 elif BUILDOPTION == None:
     print('Specify a build option using --build')
-    print('Options: GameLoop, Uart, Camera, Projector, ColorPicker')
+    print('Options:', list(BUILDDICT.keys()))
     exit()
 else:
     env.Replace(CPPDEFINES = BUILDDICT[BUILDOPTION]['defs'])

@@ -24,7 +24,8 @@ enum GameStatus {
     STARTUP,
     ACTIVE,
     GAMEOVER,
-    SHUTDOWN
+    SHUTDOWN,
+    NGAMESTATUS
 };
 
 enum StatusChange {
@@ -36,7 +37,8 @@ enum StatusChange {
     ACTIVE_CHANGE,
     MENU_CHANGE,
     EXIT2MAIN_CHANGE,
-    EXIT_ALL_CHANGE
+    EXIT_ALL_CHANGE,
+    NSTATUSCHANGE
 };
 
 // Functions
