@@ -1,7 +1,9 @@
-#include <thread>
-
-#include "CameraLoop.hpp"
-#include "GameLoop.hpp"
+#include "Projector.hpp"
+#include "DropShot.hpp"
+#include "ColorTracker.hpp" 
+#include "UartDecoder.hpp"
+#include "ContourTracker.hpp"
+#include "CameraInterface.hpp"
 
 int main(int argc, char ** argv){
 
@@ -34,15 +36,38 @@ int main(int argc, char ** argv){
     // variables between threads can be a headache. I commented it out for now
     // just to make testing simpler.
     
+    Projector proj = Projector(1536,768);
+    CameraInterface cam = CameraInterface();
+    ColorTracker colTrack = ColorTracker();
+    ContourTracker conTrack = ContourTracker();
+    std::string deviceStr = "/dev/ttyUSB0";
+    UartDecoder uart = UartDecoder(deviceStr);
+    if(uart.serial_port == 0){
+        std::cout << "Problem Setting Up Serial Port" << std::endl;
+        return 1;
+    }
+	std::string path= "/home/rachel/git/spectator/menus/main.tiff";
+    int32_t maxScore = 11;
 
-    // 4. Start Threads
-    std::thread mainThread(gameLoop);
-    std::thread cameraThread(cameraLoop);
-
-    // 5. Handle Shutdown
-    // TODO:
-    mainThread.join();
-    cameraThread.join();
-		
+    for(;;){
+        uart.readSerial();
+        switch(uart.getButton()){
+            case STAR:
+                DropShot(proj, uart, cam, colTrack, conTrack, maxScore);
+                break;
+            case TWO:
+                maxScore += 1;
+                break;
+            case FIVE:
+                maxScore -= 1;
+                break;
+            default:
+                break; 
+        }
+        std::string scoreStr = std::to_string(maxScore);
+        proj.writeText(scoreStr, 10, 0, 0, 1, 1, 1);
+        proj.renderTiff(path,0,0,1);
+        proj.refresh();
+    }
     return 0;
 }
