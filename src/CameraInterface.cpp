@@ -73,6 +73,9 @@ CameraInterface::CameraInterface() :
 #ifdef DEBUG
 	printf("Color stream started\n");
 #endif /* DEBUG */
+	int data = 0;
+	this -> setProperty(STREAM_PROPERTY_AUTO_WHITE_BALANCE, (void *) &data, true);
+	this -> setProperty(STREAM_PROPERTY_AUTO_EXPOSURE, (void *) &data, true);
 }
 
 cv::Mat CameraInterface::readDepth16U() {

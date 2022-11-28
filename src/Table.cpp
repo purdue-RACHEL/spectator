@@ -27,18 +27,18 @@ int main(int argc, char ** argv){
         if (cv::waitKey(33) == 27){
 	    table.stopDetection();
 	    break;
-	}
+
 	if(uart.getBounce() == RED || uart.getBounce() == BLUE){
-	    std::cout << "Bounce" << std::endl;
+	    //std::cout << "Bounce" << std::endl;
 	    currBounce = table.getAveragedPos(uart.last_time, uart.curr_time);
-	    //std::cout << currBounce.x << " " << currBounce.y << std::endl;
+	    std::cout << currBounce.x << " " << currBounce.y << std::endl;
 	}
-	//std::cout << "(" << table.bounceList.front().loc.x << ", " << table.bounceList.front().loc.y << ") time: " << table.bounceList.front().time << std::endl;
+	std::cout << "(" << table.bounceList.front().loc.x << ", " << table.bounceList.front().loc.y << ") time: " << table.bounceList.front().time << std::endl;
 	//std::cout << table.bounceListI << std::endl;
-	projPos.x = currBounce.x * proj.w;
-	projPos.y = currBounce.y * proj.h;
+	//projPos.x = currBounce.x * proj.w;
+	//projPos.y = currBounce.y * proj.h;
 	cv::circle(proj.display,projPos, 20, cv::Scalar(225,225,225), 4);
-	proj.drawLine(prevProjPos, projPos, 5, cv::Scalar(255, 127, 255));
+	//proj.drawLine(prevProjPos, projPos, 5, cv::Scalar(255, 127, 255));
 	prevProjPos = projPos;
 	if(proj.refresh()) break;
     }

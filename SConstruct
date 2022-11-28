@@ -14,7 +14,7 @@ env = Environment(CCFLAGS='-fpermissive -std=c++14 -I/home/rachel/git/spectator/
         LIBS=['pthread', 'tiff', 'OpenNI2', 'opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_highgui', 'opencv_video', 'opencv_imgproc', 'opencv_videoio', 'opencv_optflow'], LIBPATH=['/home/rachel/git/spectator', '/usr/local/lib'],ENV = os.environ)
 
 # Define build options
-BUILDOPTS = ['GameLoop', 'Uart', 'Camera', 'Projector', 'ColorPicker', 'BuildTest', 'Table']
+BUILDOPTS = ['GameLoop', 'Uart', 'Camera', 'Projector', 'ColorPicker', 'BuildTest', 'Table', 'DropShot']
 
 # create empty dictionary to store buildflags and arguments for env.Program()
 BUILDDICT = {opt: {'defs': list(), 'source': list()} for opt in BUILDOPTS}
@@ -46,6 +46,10 @@ BUILDDICT['BuildTest'] = {
 BUILDDICT['Table'] = {
     'defs': ['TESTTABLE'],
     'source': [BUILDDIR+'CameraInterface.cpp',BUILDDIR+'Table.cpp',BUILDDIR+'ColorTracker.cpp',BUILDDIR+'ContourTracker.cpp',BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp']
+    }
+BUILDDICT['DropShot'] = {
+    'defs': ['TESTDROPSHOT'],
+    'source': [BUILDDIR+'CameraInterface.cpp',BUILDDIR+'Table.cpp',BUILDDIR+'ColorTracker.cpp',BUILDDIR+'ContourTracker.cpp',BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp', BUILDDIR+'DropShot.cpp']
     }
 
 # Set up build option parameter

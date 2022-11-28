@@ -127,10 +127,10 @@ void Projector::renderSquare(int x, int y, int w, int h, cv::Vec3b color){
 
 //r is the perpendicular distance from (x, y) to each side of the regular polygon
 void Projector::renderRegularPolygon(int x, int y, int r, int n, cv::Vec3b color) {
-	if (n == 4) renderSquare(x - r, y - r, 2 * r, 2 * r, color);
-	else {
-		
-	}
+	
+	switch(n) {
+		case 4: renderSquare(x - r, y - r, 2 * r, 2 * r, color);
+		case 6: renderHexagon(cv::Point2f(x, y
 }
 
 int Projector::refresh(){
