@@ -49,8 +49,6 @@ int main()
 
         bounce = uart.getBounce();
         button = uart.getButton();
-        StatusChange bounceEvent = uart.getBounce();
-        StatusChange buttonEvent = uart.getButton();
 
         // TODO: keep in mind, we may have short circuiting here......
         if((bounceEvent == SCORE_CHANGE) || (buttonEvent == SCORE_CHANGE)) {
@@ -65,12 +63,14 @@ int main()
                     proj.updateScore(score_red,score_blue);
                     proj.refresh();
             #endif
+
+            // TODO: clear sprites
         }
 
             // TODO: game finish logic - wins, ... mostly to be handled in projecting
         if(score_red >= game_preferences.max_score || score_blue >= game_preferences.max_score) {
             gameStatus = GAMEOVER;
-            menuIsHidden = true;
+            menuIsHidden = false;
             std::cout << "Game Over message" << std::endl;
         }
     }
@@ -162,15 +162,12 @@ StatusChange handleButton(Button button) {
 
     //static Button previous_button = NOPRESS;
 
-    if(button == NOPRESS)
-        return NO_CHANGE;
+    if(button == NOPRESS) { return NO_CHANGE; }
     
-    if(menuIsHidden == true)
+    if(menuIsHidden == true) {
         menuIsHidden == false;
-
-        // DISPLAY DA MENU  <---------------------------------------------------------------
-
         return MENU_CHANGE;
+    }
     /*
     START-GAME MENU (GAME):
         (HANDICAPS)
