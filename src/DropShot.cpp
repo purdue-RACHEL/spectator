@@ -5,81 +5,58 @@
 
 #include "DropShot.hpp"
 #include "UartDecoder.hpp"
-#ifndef DISABLEOPENCV
 #include "Projector.hpp"
-#endif
+#include "ColorTracker.hpp"
+#include "Table.hpp"
 
 score_t score_red = 0;
 score_t score_blue = 0;
 
 GameStatus gameStatus = STARTUP;
 Game_Preferences_t game_preferences;
-bool menuIsHidden = true;         //<----------------------- HAVE SOMETHING LIKE THIS
+bool menuIsVisible = true;
 
-// GIVE PARAM: UARTDECODER WHEN CALLED FROM MAIN MENU
-//int main(UartDecoder uart)
-int main()
+int DropShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker colTrack, ContourTracker conTracker, int32_t maxScore)
 {
     Bounce bounce = NOBOUNCE;
     Button button = NOPRESS;
 
-    std::string deviceStr = "/dev/ttyUSB0";
-	UartDecoder uart = UartDecoder(deviceStr); // REMOVE AFTER NEW MAIN PARAM GET ADDED
-#ifndef DISABLEOPENCV
-	Projector proj(1920,1080);
-#endif
-
     auto start = std::chrono::high_resolution_clock::now();
     auto target = start;
 
-    while(gameStatus == STARTUP) { 
+    while(gameStatus == STARTUP) {
         std::this_thread::sleep_until(target);
         target += std::chrono::milliseconds(UART_POLL_MS);
+
+        uart.readSerial();
         handleButton(uart.getButton()); 
     }
 
     while(gameStatus == ACTIVE || gameStatus == GAMEOVER) {
-
-        // TODO: protection logic.
-        // if we happen to take 35 ms to process, there is no point for the sleep
-        // perhaps we skip the sleep
         std::this_thread::sleep_until(target);
         target += std::chrono::milliseconds(UART_POLL_MS);
-        uart.readSerial();
 
+        uart.readSerial();
         bounce = uart.getBounce();
         button = uart.getButton();
 
-        // TODO: keep in mind, we may have short circuiting here......
-        if((bounceEvent == SCORE_CHANGE) || (buttonEvent == SCORE_CHANGE)) {
-            // debug
-            std::cout << "red score: " << score_red << std::endl;
+        if(bounceEvent == SCORE_CHANGE || buttonEvent == SCORE_CHANGE) {
+            std::cout << "red  score: " << score_red << std::endl;
 	        std::cout << "blue score: " << score_blue << std::endl;
-            // EVENTUALLY UPDATE SCORE DISPLAY
 
-            // TODO: project updates
-            #ifndef DISABLEOPENCV
-                    proj.drawCenterLine();
-                    proj.updateScore(score_red,score_blue);
-                    proj.refresh();
-            #endif
+            proj.drawCenterLine();
+            proj.updateScore(score_red, score_blue);
+            proj.refresh();
 
             // TODO: clear sprites
         }
 
-            // TODO: game finish logic - wins, ... mostly to be handled in projecting
-        if(score_red >= game_preferences.max_score || score_blue >= game_preferences.max_score) {
+        if((score_red >= maxScore && score_red - score_blue > 1) || (score_blue >= maxScore && score_blue - score_red > 1)) {
             gameStatus = GAMEOVER;
-            menuIsHidden = false;
+            menuIsVisible = true;
             std::cout << "Game Over message" << std::endl;
         }
     }
-
-    // WITH BIG MAIN FUNCTION - DO NOT CALL THIS PLZ
-    uart.writeSerial(FORCE_SHUTDOWN);
-    uart.closePort();
-    // REMOVE AFTER BIG MAIN FX
-
     return gameStatus;
 }
 
@@ -147,12 +124,11 @@ StatusChange handleBounce(Bounce bounce) {
                     statusChange = FAILED_SCORE_CHANGE;
                 }
             }
-
             timeout = invalid_timeout;
-	    previous_bounce = NOBOUNCE;
+            previous_bounce = NOBOUNCE;
         }
     }
-
+    
     return statusChange;
 }
 
@@ -160,12 +136,10 @@ StatusChange handleButton(Button button) {
 
     StatusChange statusChange = NO_CHANGE;
 
-    //static Button previous_button = NOPRESS;
-
-    if(button == NOPRESS) { return NO_CHANGE; }
+    if(button == NOPRESS) { return statusChange; }
     
-    if(menuIsHidden == true) {
-        menuIsHidden == false;
+    if(menuIsVisible == false) {
+        menuIsVisible = true;
         return MENU_CHANGE;
     }
     /*
@@ -195,32 +169,32 @@ StatusChange handleButton(Button button) {
     if(gameStatus == STARTUP || gameStatus == ACTIVE) {
         switch(button) {
             case ONE:
-                if(score_red != SCORE_MAX) { score_red += 1; statusChange = SCORE_CHANGE; }
-                else { statusChange = FAILED_SCORE_CHANGE; } break;
+                if(score_red != SCORE_MAX)  { score_red += 1; statusChange = SCORE_CHANGE; }
+                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
             case A:
                 if(score_blue != SCORE_MAX) { score_blue += 1; statusChange = SCORE_CHANGE; }
-                else { statusChange = FAILED_SCORE_CHANGE; } break;
+                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
             case FOUR:
-                if(score_red != 0) { score_red -= 1; statusChange = SCORE_CHANGE; }
-                else { statusChange = FAILED_SCORE_CHANGE; } break;
+                if(score_red != 0)          { score_red -= 1; statusChange = SCORE_CHANGE; }
+                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
             case B:
-                if(score_blue != 0) { score_blue -= 1; statusChange = SCORE_CHANGE; }
-                else { statusChange = FAILED_SCORE_CHANGE; } break;
+                if(score_blue != 0)         { score_blue -= 1; statusChange = SCORE_CHANGE; }
+                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
             case STAR:
-                menuIsHidden = false;
-                if (gameStatus == STARTUP) { gameStatus = GameStatus.ACTIVE; }
+                menuIsVisible = true;
+                if (gameStatus == STARTUP)  { gameStatus = ACTIVE; score_red = 0; score_blue = 0; }
                 statusChange =  MENU_CHANGE; break;
-            case POUND: menuIsHidden = true; gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
-            case D:     menuIsHidden = true; gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
+            case POUND: gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
+            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
             case ZERO: 
                 if (gameStatus == ACTIVE) {
                     score_red = score_blue = 0;
-                    menuIsHidden = true;
+                    menuIsVisible = false;
                     statusChange = RESTART_CHANGE;
                 } break;
         }
     /*
-        END-MENU (GAMEOVER): *MENU ALWAYS UP* <-----
+        END-MENU (GAMEOVER):
             4 == SCORE BLUE --
             B == SCORE RED --
 
@@ -242,14 +216,15 @@ StatusChange handleButton(Button button) {
                 score_red = score_blue = 0;
                 gameStatus = ACTIVE;
                 statusChange = RESTART_CHANGE; break;
-            case POUND: menuIsHidden = true; gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
-            case D:     menuIsHidden = true; gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
+            case POUND: gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
+            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
         }
-    }
-
-    if (menuIsHidden == false) {
-        // HIDE DA MENU  <---------------------------------------------------------------
+        menuIsVisible = false;
     }
 
     return statusChange;
+}
+
+void DisplayMenu() {
+
 }

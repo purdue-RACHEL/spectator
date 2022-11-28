@@ -11,13 +11,6 @@
 
 // Type Declarations
 typedef uint32_t score_t;
-//typedef std::chrono::steady_clock::time_point time_t;
-
-// Struct Declarations
-typedef struct Game_Preferences_t {
-    score_t max_score = 21;
-    // TODO: continue adding these as needed
-} Game_Preferences_t;
 
 // Enum Declarations
 enum GameStatus {
