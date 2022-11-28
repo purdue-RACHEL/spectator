@@ -14,7 +14,7 @@ score_t score_blue = 0;
 
 GameStatus gameStatus = STARTUP;
 Game_Preferences_t game_preferences;
-bool menuIsHidden = true;         //<----------------------- HAVE SOMETHING LIKE THIS
+bool menuIsHidden = false;         //<----------------------- HAVE SOMETHING LIKE THIS
 
 // GIVE PARAM: UARTDECODER WHEN CALLED FROM MAIN MENU
 //int main(UartDecoder uart)
@@ -32,7 +32,7 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
     auto target = start;
 
-    while(gameStatus == STARTUP) { 
+    while(gameStatus == STARTUP) { // display game.tiff
         std::this_thread::sleep_until(target);
         target += std::chrono::milliseconds(UART_POLL_MS);
         handleButton(uart.getButton()); 

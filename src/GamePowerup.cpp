@@ -2,6 +2,7 @@
 
 #include "CameraLoop.hpp"
 #include "GameLoop.hpp"
+#include "Projector.hpp"
 
 int main(int argc, char ** argv){
 
@@ -36,13 +37,21 @@ int main(int argc, char ** argv){
     
 
     // 4. Start Threads
-    std::thread mainThread(gameLoop);
-    std::thread cameraThread(cameraLoop);
+    // std::thread mainThread(gameLoop);
+    // std::thread cameraThread(cameraLoop);
 
     // 5. Handle Shutdown
     // TODO:
-    mainThread.join();
-    cameraThread.join();
+    // mainThread.join();
+    // cameraThread.join();
+
+    std::string deviceStr = "/dev/ttyUSB0";
+	UartDecoder uart = UartDecoder(deviceStr);
+    Projector proj = Projector(1536,768);
 		
+    for(;;) { 
+        handleButton(uart.getButton()); 
+    }
+
     return 0;
 }
