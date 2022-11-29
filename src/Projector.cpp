@@ -130,9 +130,11 @@ void Projector::renderRegularPolygon(int x, int y, int r, int n, cv::Vec3b color
 	
 	switch(n) {
 		case 4: renderSquare(x - r, y - r, 2 * r, 2 * r, color);
-		case 6: renderHexagon(cv::Point2f(x, y
+			break;
+		case 6: break;
+		default: ;
+	}
 }
-
 int Projector::refresh(){
 	Projector &proj = *this;
 	cv::namedWindow("Projector", cv::WND_PROP_FULLSCREEN);
@@ -262,3 +264,67 @@ void Projector::renderTiff(std::string& fname, int xOff, int yOff,float scale){
 	}
 }
 
+void Projector::renderTiff(const std::string fname, int xOff, int yOff,float scale){
+	// Get and easy reference to the projector
+	Projector &proj = *this;
+	// Convert to Cstring for TIFF reading
+	char * cstr = new char[fname.length() + 1];
+	strcpy(cstr, fname.c_str());
+	// Attempt to open TIFF
+	TIFF* in = TIFFOpen(cstr, "r");
+	// If TIFF cannot be opened
+	if (in == NULL) {
+	std::cout << fname << " could not be opened" << std::endl;
+		return;
+	}
+	// TIFF opened
+	if (in) {
+		// Find out TIFF dimensions
+		uint32_t imageW, imageH;
+		TIFFGetField(in, TIFFTAG_IMAGEWIDTH, &imageW);
+		TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imageH);
+		//std::cerr << "TIFF WIDTH: " << imageW << std::endl;
+		//std::cerr << "TIFF HEIGHT: " << imageH << std::endl;
+	
+		// Read the TIFF image
+		size_t nPixels = 0;
+		uint32_t* raster; // Image buffer
+		nPixels = imageW * imageH;
+		raster = (uint32_t*)_TIFFmalloc(nPixels * sizeof(uint32));
+		if (raster != NULL) {
+			if (TIFFReadRGBAImage(in, imageW, imageH, raster, 0)) { // Seg Fault Here
+				for (int j = 0; j < (int) (scale * imageH); j++) {
+					for (int i = 0; i < (int) (scale * imageW); i++) {
+						//std::cout << i << " " << j << std::endl;
+						// Check the bounds of the projector
+						if(xOff + i >= proj.w)
+							break;
+						if(yOff + j >= proj.h)
+							break;
+						if(xOff + i < 0)
+							continue;	
+						if(yOff + j < 0)
+							continue;
+						// Get RGB values from unsigned int
+						
+						int i_scaled = (int) (i/scale);
+						int j_scaled = (int) (j/scale);
+						uint32_t currCol = raster[(imageH - j_scaled-1)*imageW + i_scaled];
+						// This could be wrong, need to test
+						uint8_t a = (currCol >> 24) & 0xFF;
+						uint8_t b = (currCol >> 16) & 0xFF;
+						uint8_t g = (currCol >> 8) & 0xFF;
+						uint8_t r = (currCol) & 0xFF;
+						//std::cout << (unsigned int)r << " " << (unsigned int)g << " " <<  (unsigned int)b << " " << (unsigned int) a << std::endl;
+						// Set the current pixel from the raster
+						if(a != 0)
+							proj.display.at<cv::Vec3b>(j + yOff, i + xOff) = cv::Vec3b(b,g,r);
+
+					}
+				}
+			}
+			_TIFFfree(raster);
+		}
+		TIFFClose(in);
+	}
+}

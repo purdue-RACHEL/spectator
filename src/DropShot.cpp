@@ -13,7 +13,7 @@ score_t score_red = 0;
 score_t score_blue = 0;
 
 GameStatus gameStatus = STARTUP;
-Game_Preferences_t game_preferences;
+//Game_Preferences_t game_preferences;
 bool menuIsVisible = true;
 
 int DropShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker colTrack, ContourTracker conTracker, int32_t maxScore)
@@ -40,7 +40,7 @@ int DropShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker
         bounce = uart.getBounce();
         button = uart.getButton();
 
-        if(bounceEvent == SCORE_CHANGE || buttonEvent == SCORE_CHANGE) {
+        if(bounce == SCORE_CHANGE || button == SCORE_CHANGE) {
             std::cout << "red  score: " << score_red << std::endl;
 	        std::cout << "blue score: " << score_blue << std::endl;
 
@@ -223,19 +223,19 @@ StatusChange handleButton(Button button) {
 }
 
 void DisplayMenu(Projector proj) {
+    const std::string menu_path("/home/rachel/git/spectator/menus/");
     switch(gameStatus){
         case ACTIVE:
-	        std::string path= "/home/rachel/git/spectator/menus/pause.tiff";
-            proj.renderTiff(path,0,0,1); //need to adjust scale and location
+            proj.renderTiff(menu_path + "pause.tiff", 0, 0, 1); //need to adjust scale and location
             proj.refresh();
             break;
         case GAMEOVER:
-            std::string path= "/home/rachel/git/spectator/menus/gameover.tiff";
-            proj.renderTiff(path,0,0,1); //need to adjust scale and location
+            proj.renderTiff(menu_path + "gameover.tiff", 0, 0, 1); //need to adjust scale and location
+            proj.refresh();
             break;
         case STARTUP:
-            std::string path= "/home/rachel/git/spectator/menus/game.tiff";
-            proj.renderTiff(path,0,0,1); //need to adjust scale and location
+            proj.renderTiff(menu_path + "game.tiff", 0, 0, 1); //need to adjust scale and location
+            proj.refresh();
             break;
     }
 

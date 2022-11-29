@@ -20,6 +20,7 @@ class Projector{
 	void drawLine(cv::Point2f p1, cv::Point2f p2, int width, cv::Scalar color);
 	void drawCenterLine();
         void renderTiff(std::string& fname, int xOff, int yOff, float scale);
+        void renderTiff(const std::string fname, int xOff, int yOff, float scale);
         int h,w;
         cv::Mat display;
 };

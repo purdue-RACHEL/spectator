@@ -125,7 +125,7 @@ cv::Mat CameraInterface::readDepthSlice(uint16_t start) {
 			}
 		}
 	}
-
+	return outMat;
 }
 
 void CameraInterface::getProperty(CameraInterface::StreamProperty p, void *data, bool color ) {
@@ -140,7 +140,7 @@ void CameraInterface::getProperty(CameraInterface::StreamProperty p, void *data,
 	}
 }
 
-void CameraInterface::setProperty(CameraInterface::StreamProperty p, void *data, bool color) {
+void CameraInterface::setProperty(CameraInterface::StreamProperty p, void *data, bool color = true) {
 	int dataSize = 0;
 	switch (p) {
 		case STREAM_PROPERTY_CROPPING: // OniCropping*  
