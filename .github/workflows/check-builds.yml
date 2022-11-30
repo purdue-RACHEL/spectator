@@ -1,12 +1,12 @@
 name: check-builds
-run-name: ${{ github.actor }} is trying to commit code that needs to be checked.
+run-name: ${{ github.actor }} is trying to push code that needs to be checked.
 on: [push]
 branches: 
-		- working
+- working
 
 jobs:
 		build-ubermain:
-				runs-on: self-hosted
+				runs-on: rachel-spectator
 				steps:
 						- uses: actions/checkout
 						- run: scons -c --build=UberMain
