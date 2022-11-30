@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "Projector.hpp"
 #include "VanillaShot.hpp"
 #include "ColorTracker.hpp" 
@@ -52,9 +54,14 @@ int main(int argc, char ** argv){
     int32_t maxScore = 11;
     int returnVal = STARTUP;
 
+    auto start = std::chrono::high_resolution_clock::now();
+    auto target = start;
+
 
     for(;;){
         uart.readSerial();
+        std::this_thread::sleep_until(target);
+        target += std::chrono::milliseconds(UART_POLL_MS);
         switch(uart.getButton()){
             case ZERO:
 		    /*
