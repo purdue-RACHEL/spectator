@@ -5,9 +5,10 @@ branches:
 - working
 
 jobs:
-	build-ubermain:
-		runs-on: rachel-spectator
-		steps:
-			- uses: actions/checkout
-			- run: scons -c --build=UberMain
-			- run: scons --build=UberMain
+  build-ubermain:
+    name: build UberMain on the laptop
+    runs-on: rachel-spectator
+    steps:
+      - uses: actions/checkout
+      - run: scons -c --build=UberMain
+      - run: scons --build=UberMain
