@@ -12,5 +12,5 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: scons -c --build=UberMain
-      - run: scons --build=UberMain
+      - run: scons -c --build=UberTest
+      - run: scons --build=UberTest
