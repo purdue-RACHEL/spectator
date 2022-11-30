@@ -22,11 +22,12 @@ int main(int argc, char ** argv){
     cv::Point2f currBounce = cv::Point2f(0,0);
     cv::Point2f projPos;
     cv::Point2f prevProjPos(-1, -1);
-    for(;;){
+    for(;;) {
         uart.readSerial();
         if (cv::waitKey(33) == 27){
 	    table.stopDetection();
 	    break;
+	}
 
 	if(uart.getBounce() == RED || uart.getBounce() == BLUE){
 	    //std::cout << "Bounce" << std::endl;
@@ -41,14 +42,14 @@ int main(int argc, char ** argv){
 	//proj.drawLine(prevProjPos, projPos, 5, cv::Scalar(255, 127, 255));
 	prevProjPos = projPos;
 	if(proj.refresh()) break;
-    }
+        }
     return EXIT_SUCCESS;
 }
 #endif
 
 
 
-Table::Table(CameraInterface & cam, ColorTracker & colTrack, ContourTracker & conTrack, int sampleFreq) : 
+Table::Table(CameraInterface& cam, ColorTracker& colTrack, ContourTracker& conTrack, int sampleFreq) : 
   cam(cam),
   colTrack(colTrack),
   conTrack(conTrack),
