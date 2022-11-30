@@ -54,15 +54,25 @@ int main(int argc, char ** argv){
     int32_t maxScore = 11;
     int returnVal = STARTUP;
 
-    auto start = std::chrono::high_resolution_clock::now();
-    auto target = start;
+    Button lastPress = NOPRESS;
+    Button currPress = NOPRESS;
+
+    //auto start = std::chrono::high_resolution_clock::now();
+    //auto target = start;
 
 
     for(;;){
         uart.readSerial();
-        std::this_thread::sleep_until(target);
-        target += std::chrono::milliseconds(UART_POLL_MS);
-        switch(uart.getButton()){
+        //std::this_thread::sleep_until(target);
+        //target += std::chrono::milliseconds(UART_POLL_MS);
+	currPress = uart.getButton();
+        std::string scoreStr = std::to_string(maxScore);
+        proj.writeText(scoreStr, 5, 1000, 300, 255, 255, 255);
+        proj.renderTiff(path,20,20,.25);
+        proj.refresh();
+	if(currPress == NOPRESS)
+		continue;
+        switch(currPress){
             case ZERO:
 		    /*
                 table.startDetection();
@@ -77,22 +87,26 @@ int main(int argc, char ** argv){
                 table.stopDetection();
                 break;
             case TWO:
-                maxScore += 1;
+        	maxScore += 1;
                 break;
             case FIVE:
-                maxScore -= 1;
+		if(maxScore > 1){
+        	    maxScore -= 1;
+		}	
                 break;
+	    case D:
+		if(lastPress == D){
+			returnVal = SHUTDOWN;
+		}
+		break;
             default:
                 break; 
         }
+	lastPress = currPress;
         if(returnVal == SHUTDOWN){
 	    std::cout << returnVal << " <-returnval" << std::endl;
-            //break;
+            break;
         }
-        std::string scoreStr = std::to_string(maxScore);
-        proj.writeText(scoreStr, 5, 1000, 300, 255, 255, 255);
-        proj.renderTiff(path,20,20,.25);
-        proj.refresh();
     }
     return 0;
 }
