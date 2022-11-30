@@ -15,15 +15,15 @@ int main(int argc, char** argv) {
    int Value_Upper = 255;//initial saturation(upper)//
    int exposure = 0;//exposure
    int gain = 0;//gain
-   openni::OniBool truthy = 1;
-   openni::OniBool falsey = 1;
+   OniBool truthy = 1;
+   OniBool falsey = 0;
    cam.setProperty(CameraInterface::STREAM_PROPERTY_AUTO_EXPOSURE, &truthy);
    cam.setProperty(CameraInterface::STREAM_PROPERTY_AUTO_WHITE_BALANCE, &truthy);
    cam.getProperty(CameraInterface::STREAM_PROPERTY_EXPOSURE, &exposure);
    cam.getProperty(CameraInterface::STREAM_PROPERTY_GAIN, &gain);
-   cout << exposure << gain << endl;
-   cam.setProperty(CameraInterface::STREAM_PROPERTY_AUTO_EXPOSURE, &falsey);
-   cam.setProperty(CameraInterface::STREAM_PROPERTY_AUTO_WHITE_BALANCE, &falsey);
+   cout << exposure << " " << gain << endl;
+   //cam.setProperty(CameraInterface::STREAM_PROPERTY_AUTO_EXPOSURE, &falsey);
+   //cam.setProperty(CameraInterface::STREAM_PROPERTY_AUTO_WHITE_BALANCE, &falsey);
 
    createTrackbar("Hue_Lower", "Adjust", &Hue_Lower_Value, 179);//track-bar for lower hue//
    createTrackbar("Hue_Upper", "Adjust", &Hue_Upper_Value, 179);//track-bar for lower-upper hue//
@@ -31,12 +31,10 @@ int main(int argc, char** argv) {
    createTrackbar("Sat_Upper", "Adjust", &Saturation_Upper_Value, 255);//track-bar for higher saturation//
    createTrackbar("Val_Lower", "Adjust", &Value_Lower, 255);//track-bar for lower value//
    createTrackbar("Val_Upper", "Adjust", &Value_Upper, 255);//track-bar for upper value//
-   createTrackbar("exposure", "Adjust", &exposure, 255);//track-bar for upper value//
-   createTrackbar("gain", "Adjust", &gain, 255);//track-bar for upper value//
+   createTrackbar("exposure", "Adjust", &exposure, numeric_limits<int>::max());//track-bar for upper value//
+   createTrackbar("gain", "Adjust", &gain, numeric_limits<int>::max());//track-bar for upper value//
 
    while (1) {
-      cam.setProperty(CameraInterface::STREAM_PROPERTY_EXPOSURE, &exposure);
-      cam.setProperty(CameraInterface::STREAM_PROPERTY_GAIN, &gain);
       Mat actual_Image = cam.readColor();//loading actual image to matrix from video stream//
       Mat convert_to_HSV;//declaring a matrix to store converted image//
       cvtColor(actual_Image, convert_to_HSV, COLOR_BGR2HSV);//converting BGR image to HSV and storing it in convert_to_HSV matrix//
@@ -68,8 +66,13 @@ int main(int argc, char** argv) {
       erode(detection_screen, detection_screen, getStructuringElement(MORPH_ELLIPSE, Size(1, 1)));//morphological closing for filling up small holes in foreground//
       imshow("Threesholded Image", detection_screen);//showing detected object//
       imshow("Original", actual_Image);//showing actual image//
-      if (waitKey(30) == 27){ //if esc is press break the loop//
-         break;
+      int key =waitKey(33);
+      if (key == 27){ //if esc is press break the loop//
+          break;
+      } else if (key == 'q') {
+	  std::cout << exposure << " " << gain << std::endl;
+          cam.setProperty(CameraInterface::STREAM_PROPERTY_EXPOSURE, &exposure);
+          cam.setProperty(CameraInterface::STREAM_PROPERTY_GAIN, &gain);
       }
    }
    return 0;
