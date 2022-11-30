@@ -60,6 +60,9 @@ int main(int argc, char ** argv){
     //auto start = std::chrono::high_resolution_clock::now();
     //auto target = start;
 
+#ifdef TESTBUILDINESS
+    return EXIT_SUCCESS;
+#endif
 
     for(;;){
         uart.readSerial();
