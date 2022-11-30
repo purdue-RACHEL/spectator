@@ -17,7 +17,7 @@ Game_Preferences_t game_preferences;
 bool menuIsVisible = true;
 bool prevMenuIsVisible = false;
 
-int DropShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker colTrack, ContourTracker conTracker, int32_t maxScore)
+int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker colTrack, ContourTracker conTracker, int32_t maxScore)
 {
     Bounce bounce = NOBOUNCE;
     Button button = NOPRESS;

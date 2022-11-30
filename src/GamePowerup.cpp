@@ -61,6 +61,11 @@ int main(int argc, char ** argv){
                 returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
                 table.stopDetection();
                 break;
+            case ZERO:
+                table.startDetection();
+                returnVal = VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
+                table.stopDetection();
+                break;
             case TWO:
                 maxScore += 1;
                 break;
@@ -75,6 +80,7 @@ int main(int argc, char ** argv){
         }
         std::string scoreStr = std::to_string(maxScore);
         proj.writeText(scoreStr, 10, 0, 0, 1, 1, 1);
+        proj.writeText()
         proj.renderTiff(path,0,0,1);
         proj.refresh();
     }
