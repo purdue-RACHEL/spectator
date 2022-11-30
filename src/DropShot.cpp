@@ -20,6 +20,8 @@ int DropShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker
 {
     Bounce bounce = NOBOUNCE;
     Button button = NOPRESS;
+    StatusChange bounceEvent;
+    StatusChange buttonEvent;
 
     auto start = std::chrono::high_resolution_clock::now();
     auto target = start;
@@ -39,8 +41,10 @@ int DropShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker
         uart.readSerial();
         bounce = uart.getBounce();
         button = uart.getButton();
+        bounceEvent = handleBounce(bounce);
+        buttonEvent = handleButton(button);
 
-        if(bounce == SCORE_CHANGE || button == SCORE_CHANGE) {
+        if(bounceEvent == SCORE_CHANGE || buttonEvent == SCORE_CHANGE) {
             std::cout << "red  score: " << score_red << std::endl;
 	        std::cout << "blue score: " << score_blue << std::endl;
 
@@ -179,7 +183,7 @@ StatusChange handleButton(Button button) {
                 if(score_blue != 0)         { score_blue -= 1; statusChange = SCORE_CHANGE; }
                 else                        { statusChange = FAILED_SCORE_CHANGE; } break;
             case STAR:
-                menuIsVisible = true;
+                menuIsVisible = false;
                 if (gameStatus == STARTUP)  { gameStatus = ACTIVE; score_red = 0; score_blue = 0; }
                 statusChange =  MENU_CHANGE; break;
             case POUND: gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
@@ -212,6 +216,7 @@ StatusChange handleButton(Button button) {
             case ZERO:
                 score_red = score_blue = 0;
                 gameStatus = ACTIVE;
+                menuIsVisible = false;
                 statusChange = RESTART_CHANGE; break;
             case POUND: gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
             case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
@@ -225,9 +230,9 @@ StatusChange handleButton(Button button) {
 void DisplayMenu(Projector proj) {
     std::string path;
     switch(gameStatus){
-        case ACTIVE:    path= "/home/rachel/git/spectator/menus/pause.tiff"; break;
-        case GAMEOVER:  path= "/home/rachel/git/spectator/menus/gameover.tiff"; break;
-        case STARTUP:   path= "/home/rachel/git/spectator/menus/game.tiff"; break;
+        case ACTIVE:    path= "/home/rachel/git/spectator/menus/Active.tiff"; break;
+        case GAMEOVER:  path= "/home/rachel/git/spectator/menus/GameOver.tiff"; break;
+        case STARTUP:   path= "/home/rachel/git/spectator/menus/StartUp.tiff"; break;
     }
     proj.renderTiff(path,0,0,1); //need to adjust scale and location
     proj.refresh();
