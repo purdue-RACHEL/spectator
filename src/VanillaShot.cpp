@@ -9,11 +9,12 @@
 #include "ColorTracker.hpp"
 #include "Table.hpp"
 
+void DisplayMenu(Projector proj);
+
 score_t score_red = 0;
 score_t score_blue = 0;
 
 GameStatus gameStatus = STARTUP;
-Game_Preferences_t game_preferences;
 bool menuIsVisible = true;
 bool prevMenuIsVisible = false;
 
@@ -21,6 +22,8 @@ int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTrac
 {
     Bounce bounce = NOBOUNCE;
     Button button = NOPRESS;
+    StatusChange bounceEvent;
+    StatusChange buttonEvent;
 
     auto start = std::chrono::high_resolution_clock::now();
     auto target = start;
@@ -41,6 +44,8 @@ int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTrac
         uart.readSerial();
         bounce = uart.getBounce();
         button = uart.getButton();
+        bounceEvent = handleBounce(bounce);
+        buttonEvent = handleButton(button);
 
         if(bounceEvent == SCORE_CHANGE || buttonEvent == SCORE_CHANGE) {
             std::cout << "red  score: " << score_red << std::endl;
@@ -59,7 +64,7 @@ int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTrac
 
         if (prevMenuIsVisible != menuIsVisible) {
             if (menuIsVisible) { DisplayMenu(proj); }
-            else { proj.refresh; } // CLEAR MENU
+            else { proj.refresh(); } // CLEAR MENU
             prevMenuIsVisible = menuIsVisible;
         }
     }

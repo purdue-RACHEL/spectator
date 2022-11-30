@@ -223,20 +223,12 @@ StatusChange handleButton(Button button) {
 }
 
 void DisplayMenu(Projector proj) {
-    const std::string menu_path("/home/rachel/git/spectator/menus/");
+    std::string path;
     switch(gameStatus){
-        case ACTIVE:
-            proj.renderTiff(menu_path + "pause.tiff", 0, 0, 1); //need to adjust scale and location
-            proj.refresh();
-            break;
-        case GAMEOVER:
-            proj.renderTiff(menu_path + "gameover.tiff", 0, 0, 1); //need to adjust scale and location
-            proj.refresh();
-            break;
-        case STARTUP:
-            proj.renderTiff(menu_path + "game.tiff", 0, 0, 1); //need to adjust scale and location
-            proj.refresh();
-            break;
+        case ACTIVE:    path= "/home/rachel/git/spectator/menus/pause.tiff"; break;
+        case GAMEOVER:  path= "/home/rachel/git/spectator/menus/gameover.tiff"; break;
+        case STARTUP:   path= "/home/rachel/git/spectator/menus/game.tiff"; break;
     }
-
+    proj.renderTiff(path,0,0,1); //need to adjust scale and location
+    proj.refresh();
 }
