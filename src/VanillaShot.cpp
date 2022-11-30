@@ -237,9 +237,9 @@ StatusChange handleButton(Button button) {
 void DisplayMenu(Projector proj) {
     std::string path;
     switch(gameStatus){
-        case ACTIVE:    path= "/home/rachel/git/spectator/menus/pause.tiff"; break;
-        case GAMEOVER:  path= "/home/rachel/git/spectator/menus/gameover.tiff"; break;
-        case STARTUP:   path= "/home/rachel/git/spectator/menus/game.tiff"; break;
+        case ACTIVE:    path= "/home/rachel/git/spectator/menus/Active.tiff"; break;
+        case GAMEOVER:  path= "/home/rachel/git/spectator/menus/GameOver.tiff"; break;
+        case STARTUP:   path= "/home/rachel/git/spectator/menus/StartUp.tiff"; break;
     }
     proj.renderTiff(path,0,0,1); //need to adjust scale and location
     proj.refresh();
