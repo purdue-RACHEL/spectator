@@ -34,8 +34,8 @@ enum Button {
     B,
     C,
     D,
-    STAR,
     POUND,
+    STAR,
 };
 
 enum Command {

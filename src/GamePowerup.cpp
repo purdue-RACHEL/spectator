@@ -1,5 +1,5 @@
 #include "Projector.hpp"
-#include "DropShot.hpp"
+#include "VanillaShot.hpp"
 #include "ColorTracker.hpp" 
 #include "UartDecoder.hpp"
 #include "ContourTracker.hpp"
@@ -43,12 +43,12 @@ int main(int argc, char ** argv){
     ContourTracker conTrack = ContourTracker();
     std::string deviceStr = "/dev/ttyUSB0";
     UartDecoder uart = UartDecoder(deviceStr);
-    Table table = Table(cam, colTack, conTrack, 10);
+    Table table = Table(cam, colTrack, conTrack, 10);
     if(uart.serial_port == 0){
         std::cout << "Problem Setting Up Serial Port" << std::endl;
         return 1;
     }
-	std::string path= "/home/rachel/git/spectator/menus/main.tiff";
+    std::string path= "/home/rachel/git/spectator/menus/Main.tiff";
     int32_t maxScore = 11;
     int returnVal = STARTUP;
 
@@ -56,12 +56,15 @@ int main(int argc, char ** argv){
     for(;;){
         uart.readSerial();
         switch(uart.getButton()){
-            case STAR:
+            case ZERO:
+		    /*
                 table.startDetection();
                 returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
                 table.stopDetection();
+		std::cout << "DROP SHOT NOT INCLUDED" << std::endl;
+		*/
                 break;
-            case ZERO:
+            case STAR:
                 table.startDetection();
                 returnVal = VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
                 table.stopDetection();
@@ -76,12 +79,12 @@ int main(int argc, char ** argv){
                 break; 
         }
         if(returnVal == SHUTDOWN){
-            break;
+	    std::cout << returnVal << " <-returnval" << std::endl;
+            //break;
         }
         std::string scoreStr = std::to_string(maxScore);
-        proj.writeText(scoreStr, 10, 0, 0, 1, 1, 1);
-        proj.writeText()
-        proj.renderTiff(path,0,0,1);
+        proj.writeText(scoreStr, 5, 1000, 300, 255, 255, 255);
+        proj.renderTiff(path,20,20,.25);
         proj.refresh();
     }
     return 0;

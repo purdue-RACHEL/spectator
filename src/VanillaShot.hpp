@@ -3,6 +3,10 @@
 
 // Includes
 #include "UartDecoder.hpp"
+#include "Projector.hpp"
+#include "CameraInterface.hpp"
+#include "ColorTracker.hpp"
+#include "ContourTracker.hpp"
 
 // Defines
 #define SCORE_MAX UINT32_MAX
@@ -35,7 +39,7 @@ enum StatusChange {
 };
 
 // Functions
-int gameLoop();
+int VanillaShot(Projector,UartDecoder,CameraInterface,ColorTracker,ContourTracker,int32_t);
 StatusChange handleBounce(Bounce bounce);
 StatusChange handleButton(Button button);
 

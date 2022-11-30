@@ -47,7 +47,7 @@ int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTrac
         bounceEvent = handleBounce(bounce);
         buttonEvent = handleButton(button);
 
-        if(bounceEvent == SCORE_CHANGE || buttonEvent == SCORE_CHANGE) {
+        if(gameStatus == ACTIVE && (bounceEvent == SCORE_CHANGE || buttonEvent == SCORE_CHANGE)) {
             std::cout << "red  score: " << score_red << std::endl;
 	        std::cout << "blue score: " << score_blue << std::endl;
 
@@ -241,6 +241,6 @@ void DisplayMenu(Projector proj) {
         case GAMEOVER:  path= "/home/rachel/git/spectator/menus/GameOver.tiff"; break;
         case STARTUP:   path= "/home/rachel/git/spectator/menus/StartUp.tiff"; break;
     }
-    proj.renderTiff(path,0,0,1); //need to adjust scale and location
+    proj.renderTiff(path,0,0,.25); //need to adjust scale and location
     proj.refresh();
 }
