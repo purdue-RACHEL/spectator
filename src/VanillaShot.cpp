@@ -3,23 +3,26 @@
 #include <string>
 #include <thread>
 
-#include "DropShot.hpp"
+#include "VanillaShot.hpp"
 #include "UartDecoder.hpp"
 #include "Projector.hpp"
 #include "ColorTracker.hpp"
 #include "Table.hpp"
 
-void DisplayMenu(Projector proj);
+score_t score_red;
+score_t score_blue;
+std::chrono::milliseconds last_score_timeout;
 
-score_t score_red = 0;
-score_t score_blue = 0;
+GameStatus gameStatus;
 
-GameStatus gameStatus = STARTUP;
-bool menuIsVisible = true;
-bool prevMenuIsVisible = false;
-
-int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTracker colTrack, ContourTracker conTracker, int32_t maxScore)
+int VanillaShot(Projector& proj, UartDecoder& uart, CameraInterface& cam, ColorTracker& colTrack, ContourTracker& conTracker, int32_t maxScore)
 {
+    // Init Globals
+    gameStatus = ACTIVE;
+    score_red = 0;
+    score_blue = 0;
+    last_score_timeout = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+
     Bounce bounce = NOBOUNCE;
     Button button = NOPRESS;
     StatusChange bounceEvent;
@@ -28,7 +31,9 @@ int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTrac
     auto start = std::chrono::high_resolution_clock::now();
     auto target = start;
 
-    DisplayMenu(proj);
+    updateDisplay(proj);
+    // Disable Handicap Adjustment for Now
+    /*
     while(gameStatus == STARTUP) {
         std::this_thread::sleep_until(target);
         target += std::chrono::milliseconds(UART_POLL_MS);
@@ -36,8 +41,9 @@ int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTrac
         uart.readSerial();
         handleButton(uart.getButton()); 
     }
+    */
 
-    while(gameStatus == ACTIVE || gameStatus == GAMEOVER) {
+    while(gameStatus == ACTIVE || gameStatus == GAMEOVER || gameStatus == PAUSE) {
         std::this_thread::sleep_until(target);
         target += std::chrono::milliseconds(UART_POLL_MS);
 
@@ -47,26 +53,17 @@ int VanillaShot(Projector proj, UartDecoder uart, CameraInterface cam, ColorTrac
         bounceEvent = handleBounce(bounce);
         buttonEvent = handleButton(button);
 
+	// DEBUG PRINT
         if(gameStatus == ACTIVE && (bounceEvent == SCORE_CHANGE || buttonEvent == SCORE_CHANGE)) {
             std::cout << "red  score: " << score_red << std::endl;
-	        std::cout << "blue score: " << score_blue << std::endl;
-
-            proj.drawCenterLine();
-            proj.updateScore(score_red, score_blue);
-            proj.refresh();
+	    std::cout << "blue score: " << score_blue << std::endl;
         }
 
-        if((score_red >= maxScore && score_red - score_blue > 1) || (score_blue >= maxScore && score_blue - score_red > 1)) {
+        if(gameStatus != EXITGAME && ((score_red >= maxScore && score_red - score_blue > 1) || (score_blue >= maxScore && score_blue - score_red > 1))) {
             gameStatus = GAMEOVER;
-            menuIsVisible = true;
-            std::cout << "Game Over message" << std::endl;
+            //std::cout << "Game Over message" << std::endl;
         }
-
-        if (prevMenuIsVisible != menuIsVisible) {
-            if (menuIsVisible) { DisplayMenu(proj); }
-            else { proj.refresh(); } // CLEAR MENU
-            prevMenuIsVisible = menuIsVisible;
-        }
+        updateDisplay(proj);
     }
     return gameStatus;
 }
@@ -78,8 +75,11 @@ StatusChange handleBounce(Bounce bounce) {
     static Bounce previous_bounce = NOBOUNCE;
     static auto timeout = std::chrono::high_resolution_clock::now();
     static auto invalid_timeout = timeout;
+    std::chrono::milliseconds curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 
-    if(bounce != NOBOUNCE) {
+    if(gameStatus != ACTIVE) { return statusChange; }
+
+    if(bounce != NOBOUNCE && (curr_time > last_score_timeout)) {
 
         // serve condition
         if(previous_bounce == NOBOUNCE) {
@@ -97,6 +97,7 @@ StatusChange handleBounce(Bounce bounce) {
                     } else {
                         statusChange = FAILED_SCORE_CHANGE;
                     }
+		    last_score_timeout = curr_time + std::chrono::milliseconds(SCORE_TIMEOUT_MS);
                 } else {
                     if(score_red != SCORE_MAX) {
                         score_red += 1;
@@ -104,6 +105,7 @@ StatusChange handleBounce(Bounce bounce) {
                     } else {
                         statusChange = FAILED_SCORE_CHANGE;
                     }
+		    last_score_timeout = curr_time + std::chrono::milliseconds(SCORE_TIMEOUT_MS);
                 }
 
                 previous_bounce = NOBOUNCE;
@@ -149,10 +151,6 @@ StatusChange handleButton(Button button) {
 
     if(button == NOPRESS) { return statusChange; }
     
-    if(menuIsVisible == false) {
-        menuIsVisible = true;
-        return MENU_CHANGE;
-    }
     /*
     START-GAME MENU (GAME):
         (HANDICAPS)
@@ -175,7 +173,7 @@ StatusChange handleButton(Button button) {
         # == RETURN TO MAIN MENU
         D == EXIT
     */
-    if(gameStatus == STARTUP || gameStatus == ACTIVE) {
+    if(gameStatus == STARTUP || gameStatus == ACTIVE || gameStatus == PAUSE) {
         switch(button) {
             case ONE:
                 if(score_red != SCORE_MAX)  { score_red += 1; statusChange = SCORE_CHANGE; }
@@ -190,15 +188,19 @@ StatusChange handleButton(Button button) {
                 if(score_blue != 0)         { score_blue -= 1; statusChange = SCORE_CHANGE; }
                 else                        { statusChange = FAILED_SCORE_CHANGE; } break;
             case STAR:
-                menuIsVisible = false;
                 if (gameStatus == STARTUP)  { gameStatus = ACTIVE; score_red = 0; score_blue = 0; }
+		else if (gameStatus == PAUSE) { gameStatus = ACTIVE; }
+	        else if (gameStatus == ACTIVE) { gameStatus = PAUSE; }
                 statusChange =  MENU_CHANGE; break;
-            case POUND: gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
-            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
+            case POUND: 
+		if (gameStatus == PAUSE){
+		    gameStatus = EXITGAME;
+		    statusChange = EXIT2MAIN_CHANGE; break;
+		}
             case ZERO: 
-                if (gameStatus == ACTIVE) {
+                if (gameStatus == PAUSE) {
                     score_red = score_blue = 0;
-                    menuIsVisible = false;
+		    gameStatus = ACTIVE;
                     statusChange = RESTART_CHANGE;
                 } break;
         }
@@ -213,34 +215,68 @@ StatusChange handleButton(Button button) {
     } else if(gameStatus == GAMEOVER) {
         switch(button) {
             case FOUR:
-                score_red -= 1; 
+		if (score_red != 0){
+                	score_red -= 1; 
+		}
                 statusChange = SCORE_CHANGE;
-                gameStatus = ACTIVE; break;
+                gameStatus = PAUSE; break;
             case B:
-                score_blue -= 1; 
+		if (score_red != 0){
+                	score_blue -= 1; 
+		}
                 statusChange = SCORE_CHANGE;
-                gameStatus = ACTIVE; break;
+                gameStatus = PAUSE; break;
             case ZERO:
                 score_red = score_blue = 0;
                 gameStatus = ACTIVE;
-                menuIsVisible = false;
                 statusChange = RESTART_CHANGE; break;
-            case POUND: gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
-            case D:     gameStatus = SHUTDOWN; statusChange = EXIT_ALL_CHANGE; break;
+            case POUND:
+		std::cout << "THIS" << std::endl;
+		gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
         }
-        menuIsVisible = false;
     }
 
     return statusChange;
 }
 
-void DisplayMenu(Projector proj) {
+void updateDisplay(Projector& proj) {
     std::string path;
+    std::string redScoreLabel = "RED:";
+    std::string blueScoreLabel = "BLUE:";
+    std::string redScoreStr = std::to_string(score_red);
+    std::string blueScoreStr = std::to_string(score_blue);
     switch(gameStatus){
-        case ACTIVE:    path= "/home/rachel/git/spectator/menus/Active.tiff"; break;
-        case GAMEOVER:  path= "/home/rachel/git/spectator/menus/GameOver.tiff"; break;
-        case STARTUP:   path= "/home/rachel/git/spectator/menus/StartUp.tiff"; break;
+        case PAUSE:    
+		path= "/home/rachel/git/spectator/menus/Active.tiff";
+    		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
+                proj.drawCenterLine();
+		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		break;
+        case GAMEOVER:  
+		path= "/home/rachel/git/spectator/menus/GameOver.tiff"; 
+    		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
+                proj.drawCenterLine();
+		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		break;
+        case STARTUP:   
+		path= "/home/rachel/git/spectator/menus/StartUp.tiff"; 
+    		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
+                proj.drawCenterLine();
+		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		break;
+	case ACTIVE:
+                proj.drawCenterLine();
+                proj.updateScore(score_red, score_blue);
+		break;
     }
-    proj.renderTiff(path,0,0,.25); //need to adjust scale and location
     proj.refresh();
 }

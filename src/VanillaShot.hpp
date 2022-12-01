@@ -11,6 +11,7 @@
 // Defines
 #define SCORE_MAX UINT32_MAX
 #define BOUNCE_TIMEOUT_MS   3000
+#define SCORE_TIMEOUT_MS    3000
 #define UART_POLL_MS        30
 
 // Type Declarations
@@ -21,7 +22,8 @@ enum GameStatus {
     STARTUP  = 0,   //INIT
     ACTIVE   = 1,   //MID-GAME
     GAMEOVER = 2,   //POST-GAME
-    EXITGAME = 3,   //EXIT TO MAIN MENU
+    PAUSE = 3,      //PAUSE
+    EXITGAME = 4,   //EXIT TO MAIN MENU
     SHUTDOWN = -1   //TURN OFF
 };
 
@@ -39,8 +41,10 @@ enum StatusChange {
 };
 
 // Functions
-int VanillaShot(Projector,UartDecoder,CameraInterface,ColorTracker,ContourTracker,int32_t);
+int VanillaShot(Projector&,UartDecoder&,CameraInterface&,ColorTracker&,ContourTracker&,int32_t);
 StatusChange handleBounce(Bounce bounce);
 StatusChange handleButton(Button button);
+void updateDisplay(Projector& proj);
+
 
 #endif

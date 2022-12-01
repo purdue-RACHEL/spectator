@@ -8,6 +8,8 @@
 #include "CameraInterface.hpp"
 #include "Table.hpp"
 
+void updateMainMenu(Projector& proj, std::string& path, int32_t maxScore, int32_t gameMode);
+
 int main(int argc, char ** argv){
 
 	// TODO:
@@ -38,6 +40,7 @@ int main(int argc, char ** argv){
     // just end up locking every thread while one is running. Also managing shared 
     // variables between threads can be a headache. I commented it out for now
     // just to make testing simpler.
+
     
     Projector proj = Projector(1536,768);
     CameraInterface cam = CameraInterface();
@@ -50,44 +53,52 @@ int main(int argc, char ** argv){
         std::cout << "Problem Setting Up Serial Port" << std::endl;
         return 1;
     }
-    std::string path= "/home/rachel/git/spectator/menus/Main.tiff";
-    int32_t maxScore = 11;
     int returnVal = STARTUP;
+
+    std::string path= "/home/rachel/git/spectator/menus/Main.tiff";
+    std::string exitStr = "PRESS AGAIN TO EXIT";
+    int32_t maxScore = 11;
+    int32_t gameMode = 0;
 
     Button lastPress = NOPRESS;
     Button currPress = NOPRESS;
 
-    //auto start = std::chrono::high_resolution_clock::now();
+
+//auto start = std::chrono::high_resolution_clock::now();
     //auto target = start;
 
 #ifdef TESTBUILDINESS
     return EXIT_SUCCESS;
 #endif
 
+    updateMainMenu(proj, path, maxScore, gameMode);
     for(;;){
         uart.readSerial();
         //std::this_thread::sleep_until(target);
         //target += std::chrono::milliseconds(UART_POLL_MS);
 	currPress = uart.getButton();
-        std::string scoreStr = std::to_string(maxScore);
-        proj.writeText(scoreStr, 5, 1000, 300, 255, 255, 255);
-        proj.renderTiff(path,20,20,.25);
-        proj.refresh();
 	if(currPress == NOPRESS)
 		continue;
         switch(currPress){
             case ZERO:
-		    /*
-                table.startDetection();
-                returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
-                table.stopDetection();
-		std::cout << "DROP SHOT NOT INCLUDED" << std::endl;
-		*/
                 break;
             case STAR:
-                table.startDetection();
-                returnVal = VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
-                table.stopDetection();
+		switch(gameMode){
+		    case 0:
+                    	returnVal = VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
+			break;
+		    case 1:
+		    	/*
+                	table.startDetection();
+                	returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
+                	table.stopDetection();
+			*/
+			std::cout << "DROP SHOT NOT INCLUDED" << std::endl;
+			break;
+		   default:
+		std::cout << "ERROR WHEN CHOOSING GAME MODE" << std::endl;
+			break;
+		}
                 break;
             case TWO:
         	maxScore += 1;
@@ -97,9 +108,17 @@ int main(int argc, char ** argv){
         	    maxScore -= 1;
 		}	
                 break;
+	    case ONE:
+		gameMode = (gameMode + 1) % 2;
+		break;
+	    case FOUR:
+		gameMode = (gameMode + 1) % 2;
+		break;
 	    case D:
+		proj.writeText(exitStr, 4, 800, 700, 0, 0, 255);
 		if(lastPress == D){
 			returnVal = SHUTDOWN;
+
 		}
 		break;
             default:
@@ -107,9 +126,35 @@ int main(int argc, char ** argv){
         }
 	lastPress = currPress;
         if(returnVal == SHUTDOWN){
-	    std::cout << returnVal << " <-returnval" << std::endl;
+	    std::cout << "GAME STATE SHUTDOWN, BYE BYE." << std::endl;
             break;
         }
+        updateMainMenu(proj, path, maxScore, gameMode);
     }
     return 0;
+}
+
+void updateMainMenu(Projector& proj, std::string& path, int32_t maxScore, int32_t gameMode){
+	std::string maxScoreLabel = "MAX SCORE:";
+        std::string maxScoreStr = std::to_string(maxScore);
+	std::string gameModeLabel = "GAMEMODE:";
+	std::string gameModeStr;
+	switch(gameMode){
+	    case 0: 
+		gameModeStr = "Vanilla Shot";
+		break;
+	    case 1:
+		gameModeStr = "Drop Shot";
+		break;
+	    default:
+		std::cout << "IMPROPER GAMEMODE" << std::endl;
+		break;
+	}
+	proj.writeText(gameModeLabel, 5, 800, 300, 255, 255, 255);
+	proj.writeText(gameModeStr, 5, 800, 400, 255, 255, 255);
+	proj.drawCenterLine();
+        proj.writeText(maxScoreLabel, 5, 800, 100, 255, 255, 255);
+        proj.writeText(maxScoreStr, 5, 800, 200, 255, 255, 255);
+        proj.renderTiff(path,80,150,.25);
+        proj.refresh();
 }

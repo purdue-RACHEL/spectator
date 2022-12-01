@@ -47,7 +47,6 @@ int main(int argc, char ** argv){
 }
 #endif
 
-
 Projector::Projector(int w, int h){
 	Projector &proj = *this;
         proj.h = h;
@@ -57,7 +56,7 @@ Projector::Projector(int w, int h){
 }
 void Projector::drawCenterLine(){	
 	Projector &proj = *this;
-	proj.renderSquare(1920/2 - 8,0,16,1080,0,0,1);
+	proj.renderSquare(proj.w/2 - 8,0,16,proj.h,255,255,255);
 }
 void Projector::putPixel(int x, int y, cv::Vec3b color) {
 	Projector &proj = *this;
@@ -149,7 +148,7 @@ int Projector::refresh(){
 void Projector::writeText(std::string& text, float  size, int x, int y, int r, int g, int b){
 	Projector &proj = *this;
 	cv::putText(proj.display, text, cv::Point(x,y),
-			cv::FONT_HERSHEY_SIMPLEX, size, cv::Scalar(r,g,b), 20, CV_8UC3);
+			cv::FONT_HERSHEY_PLAIN, size, cv::Scalar(r,g,b), 7, CV_8UC3);
 }
 
 void Projector::updateScore(int scoreRed, int scoreBlue) {
@@ -170,7 +169,7 @@ void Projector::writeRotateTextFont(const std::string& text, float size, int x, 
 	//Black Backdrop
 	//cv::Mat rotImage = cv::Mat::zeros(proj.display.cols, proj.display.rows, proj.display.type());
 	//White Backdrop
-	cv::Mat rotImage = cv::Mat(proj.display.cols, proj.display.rows, CV_8UC3, cv::Scalar(255, 255, 255));
+	cv::Mat rotImage = cv::Mat(proj.display.cols, proj.display.rows, CV_8UC3, cv::Scalar(0, 0, 0));
 	if(angle == 270){
 		cv::putText(rotImage, text, cv::Point(proj.h - y,x),
 			cvfont, size, cv::Scalar(b,g,r), 20, CV_8UC3);
@@ -189,8 +188,8 @@ void Projector::writeRotateTextFont(const std::string& text, float size, int x, 
 	for(int u = 0; u < proj.w; u++){
 		for(int v = 0; v< proj.h; v++){
 			cv::Vec3b currCol = rotImage.at<cv::Vec3b>(v,u);
-			cv::Vec3b white = cv::Vec3b(255,255,255);
-			if(currCol != white){
+			cv::Vec3b black = cv::Vec3b(0,0,0);
+			if(currCol != black){
 				proj.display.at<cv::Vec3b>(v,u) = rotImage.at<cv::Vec3b>(v,u);
 			}
 
@@ -200,6 +199,8 @@ void Projector::writeRotateTextFont(const std::string& text, float size, int x, 
 }
 
 void Projector::renderTiff(std::string& fname, int xOff, int yOff,float scale){
+	// Disable TIFF Warnings
+	TIFFSetWarningHandler(NULL);
 	// Get and easy reference to the projector
 	Projector &proj = *this;
 	// Convert to Cstring for TIFF reading
