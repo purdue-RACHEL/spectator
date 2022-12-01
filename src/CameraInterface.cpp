@@ -140,7 +140,7 @@ void CameraInterface::getProperty(CameraInterface::StreamProperty p, void *data,
 	}
 }
 
-void CameraInterface::setProperty(CameraInterface::StreamProperty p, void *data, bool color = true) {
+void CameraInterface::setProperty(CameraInterface::StreamProperty p, void *data, bool color /*= true*/) {
 	int dataSize = 0;
 	switch (p) {
 		case STREAM_PROPERTY_CROPPING: // OniCropping*  
