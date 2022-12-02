@@ -48,6 +48,7 @@ StatusChange handleBounce(Bounce bounce);
 StatusChange handleButton(Button button);
 StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc);
 void updateDisplay(Projector& proj);
+void updateDisplayDropShot(Projector& proj);
 
 
 #endif

@@ -443,7 +443,65 @@ int DropShot(Projector& proj, UartDecoder& uart, CameraInterface& cam, Table& ta
             gameStatus = GAMEOVER;
             //std::cout << "Game Over message" << std::endl;
         }
-        updateDisplay(proj);
+        updateDisplayDropShot(proj);
     }
     return gameStatus;
+}
+
+void updateDisplayDropShot(Projector& proj) {
+    std::string path;
+    std::string redScoreLabel = "RED:";
+    std::string blueScoreLabel = "BLUE:";
+    std::string redScoreStr = std::to_string(score_red);
+    std::string blueScoreStr = std::to_string(score_blue);
+    switch(gameStatus){
+        case PAUSE:    
+		path= "/home/rachel/git/spectator/menus/Active.tiff";
+    		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
+                proj.drawCenterLine();
+		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		break;
+        case GAMEOVER:  
+		path= "/home/rachel/git/spectator/menus/GameOver.tiff"; 
+    		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
+                proj.drawCenterLine();
+		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		break;
+        case STARTUP:   
+		path= "/home/rachel/git/spectator/menus/StartUp.tiff"; 
+    		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
+                proj.drawCenterLine();
+		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
+        proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		break;
+	case ACTIVE:
+        float squareH = proj.h/5;
+        float currX = 0;
+        float currY = 0;
+        for(int i=0; i<10; i++){
+            for(int j=0; j<5; j++){
+                if(dropShotGrid[i][j]) {
+                    proj.renderSquare(currX,currY,squareH,squareH,255,255,255);
+                    proj.renderSquare(currX+4,currY+4,squareH-8,squareH-8,0,0,0);
+                }
+                else {
+                    proj.renderSquare(currX,currY,squareH,squareH,0,0,255);
+                    proj.renderSquare(currX+4,currY+4,squareH-8,squareH-8,0,0,0);
+                }
+                currY += squareH;
+            } 
+            currX += squareH;
+        }
+        proj.updateScore(score_red, score_blue);
+		break;
+    }
+    proj.refresh();
 }

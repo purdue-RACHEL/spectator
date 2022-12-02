@@ -87,11 +87,9 @@ int main(int argc, char ** argv){
                     	returnVal = VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
 			break;
 		    case 1:
-		    	/*
-                	table.startDetection();
-                	returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
-                	table.stopDetection();
-			*/
+                table.startDetection();
+                returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
+                table.stopDetection();
 			std::cout << "DROP SHOT NOT INCLUDED" << std::endl;
 			break;
 		   default:
