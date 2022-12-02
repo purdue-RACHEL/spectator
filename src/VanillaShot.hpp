@@ -10,7 +10,7 @@
 
 // Defines
 #define SCORE_MAX UINT32_MAX
-#define BOUNCE_TIMEOUT_MS   3000
+#define BOUNCE_TIMEOUT_MS   1500
 #define SCORE_TIMEOUT_MS    3000
 #define UART_POLL_MS        30
 

@@ -104,7 +104,7 @@ int main(int argc, char ** argv){
         	maxScore += 1;
                 break;
             case FIVE:
-		if(maxScore > 1){
+		if(maxScore > 6){
         	    maxScore -= 1;
 		}	
                 break;
@@ -140,15 +140,9 @@ void updateMainMenu(Projector& proj, std::string& path, int32_t maxScore, int32_
 	std::string gameModeLabel = "GAMEMODE:";
 	std::string gameModeStr;
 	switch(gameMode){
-	    case 0: 
-		gameModeStr = "Vanilla Shot";
-		break;
-	    case 1:
-		gameModeStr = "Drop Shot";
-		break;
-	    default:
-		std::cout << "IMPROPER GAMEMODE" << std::endl;
-		break;
+	    case 0: gameModeStr = "Vanilla Shot"; break;
+	    case 1: gameModeStr = "Drop Shot"; break;
+	    default: std::cout << "IMPROPER GAMEMODE" << std::endl; break;
 	}
 	proj.writeText(gameModeLabel, 5, 800, 300, 255, 255, 255);
 	proj.writeText(gameModeStr, 5, 800, 400, 255, 255, 255);

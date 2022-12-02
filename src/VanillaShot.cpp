@@ -150,6 +150,7 @@ StatusChange handleButton(Button button) {
     StatusChange statusChange = NO_CHANGE;
 
     if(button == NOPRESS) { return statusChange; }
+    std::cout << "BUTTON PRESSED " << button << std::endl;
     
     /*
     START-GAME MENU (GAME):
@@ -176,17 +177,26 @@ StatusChange handleButton(Button button) {
     if(gameStatus == STARTUP || gameStatus == ACTIVE || gameStatus == PAUSE) {
         switch(button) {
             case ONE:
-                if(score_red != SCORE_MAX)  { score_red += 1; statusChange = SCORE_CHANGE; }
-                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
+		if(gameStatus == PAUSE){
+                	if(score_red != SCORE_MAX)  { score_red += 1; statusChange = SCORE_CHANGE; }
+                	else                        { statusChange = FAILED_SCORE_CHANGE; }
+		} break;
             case A:
-                if(score_blue != SCORE_MAX) { score_blue += 1; statusChange = SCORE_CHANGE; }
-                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
+		if(gameStatus == PAUSE) { 
+                	if(score_blue != SCORE_MAX) { score_blue += 1; statusChange = SCORE_CHANGE; }
+                	else                        { statusChange = FAILED_SCORE_CHANGE; }
+		} break;
             case FOUR:
-                if(score_red != 0)          { score_red -= 1; statusChange = SCORE_CHANGE; }
-                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
+		if(gameStatus == PAUSE) { 
+			if(score_red != 0)          { score_red -= 1; statusChange = SCORE_CHANGE; }
+			else                        { statusChange = FAILED_SCORE_CHANGE; }
+		} break;
             case B:
-                if(score_blue != 0)         { score_blue -= 1; statusChange = SCORE_CHANGE; }
-                else                        { statusChange = FAILED_SCORE_CHANGE; } break;
+		if(gameStatus == PAUSE) { 
+			if(score_blue != 0)         { score_blue -= 1; statusChange = SCORE_CHANGE; }
+			else                        { statusChange = FAILED_SCORE_CHANGE; }
+		}
+		break;
             case STAR:
                 if (gameStatus == STARTUP)  { gameStatus = ACTIVE; score_red = 0; score_blue = 0; }
 		else if (gameStatus == PAUSE) { gameStatus = ACTIVE; }
@@ -195,8 +205,8 @@ StatusChange handleButton(Button button) {
             case POUND: 
 		if (gameStatus == PAUSE){
 		    gameStatus = EXITGAME;
-		    statusChange = EXIT2MAIN_CHANGE; break;
-		}
+		    statusChange = EXIT2MAIN_CHANGE; 
+		} break;
             case ZERO: 
                 if (gameStatus == PAUSE) {
                     score_red = score_blue = 0;
@@ -215,15 +225,11 @@ StatusChange handleButton(Button button) {
     } else if(gameStatus == GAMEOVER) {
         switch(button) {
             case FOUR:
-		if (score_red != 0){
-                	score_red -= 1; 
-		}
+		if (score_red != 0) { score_red -= 1; }
                 statusChange = SCORE_CHANGE;
                 gameStatus = PAUSE; break;
             case B:
-		if (score_red != 0){
-                	score_blue -= 1; 
-		}
+		if (score_blue != 0) { score_blue -= 1; }
                 statusChange = SCORE_CHANGE;
                 gameStatus = PAUSE; break;
             case ZERO:
