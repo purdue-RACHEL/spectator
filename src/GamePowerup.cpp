@@ -140,7 +140,7 @@ void updateMainMenu(Projector& proj, std::string& path, int32_t maxScore, int32_
 	std::string gameModeLabel = "GAMEMODE:";
 	std::string gameModeStr;
 	switch(gameMode){
-	    case 0: gameModeStr = "Vanilla Shot"; break;
+	    case 0: gameModeStr = "Vanilla"; break;
 	    case 1: gameModeStr = "Drop Shot"; break;
 	    default: std::cout << "IMPROPER GAMEMODE" << std::endl; break;
 	}
