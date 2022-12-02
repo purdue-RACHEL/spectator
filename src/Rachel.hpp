@@ -46,6 +46,7 @@ int VanillaShot(Projector&,UartDecoder&,CameraInterface&,ColorTracker&,ContourTr
 int DropShot(Projector&,UartDecoder&,CameraInterface&,Table&,ColorTracker&,ContourTracker&,int32_t);
 StatusChange handleBounce(Bounce bounce);
 StatusChange handleButton(Button button);
+StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc);
 void updateDisplay(Projector& proj);
 
 
