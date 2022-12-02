@@ -59,7 +59,8 @@ int VanillaShot(Projector& proj, UartDecoder& uart, CameraInterface& cam, ColorT
 	    std::cout << "blue score: " << score_blue << std::endl;
         }
 
-        if(gameStatus != EXITGAME && ((score_red >= maxScore && score_red - score_blue > 1) || (score_blue >= maxScore && score_blue - score_red > 1))) {
+        //if(gameStatus != EXITGAME && ((score_red >= maxScore && score_red - score_blue > 1) || (score_blue >= maxScore && score_blue - score_red > 1))) {
+        if(gameStatus != EXITGAME && ((score_red >= maxScore || score_blue >= maxScore) && (score_red - score_blue > 1 || score_blue - score_red > 1))) {
             gameStatus = GAMEOVER;
             //std::cout << "Game Over message" << std::endl;
         }
