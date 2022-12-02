@@ -1,12 +1,11 @@
 #include <chrono>
 
 #include "Projector.hpp"
-#include "VanillaShot.hpp"
+#include "Rachel.hpp"
 #include "ColorTracker.hpp" 
 #include "UartDecoder.hpp"
 #include "ContourTracker.hpp"
 #include "CameraInterface.hpp"
-#include "Table.hpp"
 
 void updateMainMenu(Projector& proj, std::string& path, int32_t maxScore, int32_t gameMode);
 

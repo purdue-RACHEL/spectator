@@ -50,11 +50,11 @@ BUILDDICT['Table'] = {
     }
 BUILDDICT['UberMain'] = {
     'defs': [],
-    'source': [BUILDDIR+'GamePowerup.cpp',BUILDDIR+'CameraInterface.cpp',BUILDDIR+'Table.cpp',BUILDDIR+'ColorTracker.cpp',BUILDDIR+'ContourTracker.cpp',BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp', BUILDDIR+'VanillaShot.cpp']
+    'source': [BUILDDIR+'GamePowerup.cpp',BUILDDIR+'CameraInterface.cpp',BUILDDIR+'Table.cpp',BUILDDIR+'ColorTracker.cpp',BUILDDIR+'ContourTracker.cpp',BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp', BUILDDIR+'Rachel.cpp']
 }
 BUILDDICT['UberTest'] = {
     'defs': ['TESTBUILDINESS'],
-    'source': [BUILDDIR+'GamePowerup.cpp',BUILDDIR+'CameraInterface.cpp',BUILDDIR+'Table.cpp',BUILDDIR+'ColorTracker.cpp',BUILDDIR+'ContourTracker.cpp',BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp', BUILDDIR+'VanillaShot.cpp']
+    'source': [BUILDDIR+'GamePowerup.cpp',BUILDDIR+'CameraInterface.cpp',BUILDDIR+'Table.cpp',BUILDDIR+'ColorTracker.cpp',BUILDDIR+'ContourTracker.cpp',BUILDDIR+'Projector.cpp', BUILDDIR+'UartDecoder.cpp', BUILDDIR+'Rachel.cpp']
 }
 
 
