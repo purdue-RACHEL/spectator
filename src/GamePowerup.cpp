@@ -1,12 +1,11 @@
 #include <chrono>
 
 #include "Projector.hpp"
-#include "VanillaShot.hpp"
+#include "Rachel.hpp"
 #include "ColorTracker.hpp" 
 #include "UartDecoder.hpp"
 #include "ContourTracker.hpp"
 #include "CameraInterface.hpp"
-#include "Table.hpp"
 
 void updateMainMenu(Projector& proj, std::string& path, int32_t maxScore, int32_t gameMode);
 
@@ -88,11 +87,9 @@ int main(int argc, char ** argv){
                     	returnVal = VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
 			break;
 		    case 1:
-		    	/*
-                	table.startDetection();
-                	returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
-                	table.stopDetection();
-			*/
+                table.startDetection();
+                returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
+                table.stopDetection();
 			std::cout << "DROP SHOT NOT INCLUDED" << std::endl;
 			break;
 		   default:

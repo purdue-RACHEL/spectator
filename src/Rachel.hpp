@@ -7,6 +7,7 @@
 #include "CameraInterface.hpp"
 #include "ColorTracker.hpp"
 #include "ContourTracker.hpp"
+#include "Table.hpp"
 
 // Defines
 #define SCORE_MAX UINT32_MAX
@@ -42,9 +43,12 @@ enum StatusChange {
 
 // Functions
 int VanillaShot(Projector&,UartDecoder&,CameraInterface&,ColorTracker&,ContourTracker&,int32_t);
+int DropShot(Projector&,UartDecoder&,CameraInterface&,Table&,ColorTracker&,ContourTracker&,int32_t);
 StatusChange handleBounce(Bounce bounce);
 StatusChange handleButton(Button button);
+StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc);
 void updateDisplay(Projector& proj);
+void updateDisplayDropShot(Projector& proj);
 
 
 #endif
