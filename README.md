@@ -1,4 +1,11 @@
 # spectator
+
+## Purpose
+
+This repository stores the source code for our laptop that processes the game logic, camera logic, and projector logic. It reads camera data through USB, displays to the projector through VGA, and communicates to the microcontroller through UART (via a [USB-to-serial chip](https://ftdichip.com/products/ft232rl/)).
+
+As an aside, the microcontroller handles user input via a button matrix and detects bounces through piezoelectric sensors connected to the bottom of the table.
+
 ## Code Structure
 ### GamePowerup
 The main class. This class contains startup functions and starts the two main threads
