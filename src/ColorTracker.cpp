@@ -11,9 +11,15 @@ ColorTracker::~ColorTracker() {}
 
 cv::Mat ColorTracker::filterImage(cv::Mat in, int hl, int sl, int vl, int hu, int su, int vu) {
 	cv::Mat im = in;//loading actual image to matrix from video stream//
+	//Sharpen image to try to mitigate motion blur
+	cv::Mat sharp;//Mat for sharpened Image//
+
+	cv::GaussianBlur(im, sharp, cv::Size(0, 0), 3);//Sharpened image is the "inverse" of a blurred image//
+	cv::addWeighted(im, 2, sharp, -1, 0, sharp);//Remove blurred image from in to achieve sharpening//
 	cv::Mat imHSV;//declaring a matrix to store converted image//
-	cv::cvtColor(im, imHSV, cv::COLOR_BGR2HSV);//converting BGR image to HSV and storing it in convert_to_HSV matrix//
+	cv::cvtColor(sharp, imHSV, cv::COLOR_BGR2HSV);//converting BGR image to HSV and storing it in convert_to_HSV matrix//
 	cv::Mat imBIN;//declaring matrix for window where object will be detected//
+
 	if (hl > hu) {
 		cv::Mat temp1, temp2;
 		cv::inRange(

@@ -16,6 +16,7 @@ class ContourTracker{
 
         ContourTracker();
         void findContours(cv::Mat);
+	void findContours(cv::Mat threshold_image, cv::Point2f top_left, cv::Point2f bottom_right);
         cv::Point ballPos(std::vector<std::vector<cv::Point>>);
         cv::Mat drawContours(std::vector<std::vector<cv::Point>>, int, int);
         cv::Mat drawContours(int, int);

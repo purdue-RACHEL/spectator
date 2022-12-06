@@ -14,6 +14,20 @@ void ContourTracker::findContours(cv::Mat threshold_image){
 	cv::findContours(threshold_image, _contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
     curr.contours = _contours;
 }
+void ContourTracker::findContours(cv::Mat threshold_image, cv::Point2f top_left, cv::Point2f bottom_right){
+    ContourTracker &curr = *this;
+    cv::rectangle(threshold_image,cv::Point2f(0,0),cv::Point2f(top_left.x,threshold_image.cols),cv::Scalar(0,0,0),-1);
+    cv::rectangle(threshold_image,cv::Point2f(top_left.x,0),cv::Point2f(bottom_right.x,top_left.y),cv::Scalar(0,0,0),-1);
+    cv::rectangle(threshold_image,cv::Point2f(top_left.x,bottom_right.y),cv::Point2f(bottom_right.x,threshold_image.rows),cv::Scalar(0,0,0),-1);
+    cv::rectangle(threshold_image,cv::Point2f(bottom_right.x,0),cv::Point2f(threshold_image.cols,threshold_image.rows),cv::Scalar(0,0,0),-1);
+    cv::imshow("Cropped Filtered",threshold_image);
+    std::vector<std::vector<cv::Point>> _contours; 
+    std::vector<cv::Vec4i> hierarchy;
+    	//offset taken into account on contour data
+	//cv::findContours(threshold_image, _contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, curr.table_offset);
+	cv::findContours(threshold_image, _contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    curr.contours = _contours;
+}
 
 cv::Mat ContourTracker::drawContours(std::vector<std::vector<cv::Point>> contours,int rows, int cols){
 	cv::Mat black(rows, cols, CV_8UC3, cv::Scalar(0, 0, 0));
@@ -36,6 +50,7 @@ cv::Point ContourTracker::findBallCenter(){
 	double largestArea = 0;
 	int ballx = -1;
 	int bally = -1;
+#pragma omp for
 	for (std::vector<cv::Point> cont : contours){
 		// Calculate Area
 		double currArea = cv::contourArea(cont);

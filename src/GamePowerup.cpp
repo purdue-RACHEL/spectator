@@ -41,13 +41,14 @@ int main(int argc, char ** argv){
     // just to make testing simpler.
 
     
-    Projector proj = Projector(1536,768);
+    Projector proj = Projector(1600,860);
     CameraInterface cam = CameraInterface();
     ColorTracker colTrack = ColorTracker();
     ContourTracker conTrack = ContourTracker();
     std::string deviceStr = "/dev/ttyUSB0";
     UartDecoder uart = UartDecoder(deviceStr);
-    Table table = Table(cam, colTrack, conTrack, 10);
+    Table table = Table(cam, colTrack, conTrack, 30);
+    table.setTableBorder();
     if(uart.serial_port == 0){
         std::cout << "Problem Setting Up Serial Port" << std::endl;
         return 1;
@@ -84,16 +85,15 @@ int main(int argc, char ** argv){
             case STAR:
 		switch(gameMode){
 		    case 0:
-                    	returnVal = VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
+                    	VanillaShot(proj, uart, cam, colTrack, conTrack, maxScore);
 			break;
 		    case 1:
-                table.startDetection();
-                returnVal = DropShot(proj, uart, cam, colTrack, conTrack, table, maxScore);
-                table.stopDetection();
-			std::cout << "DROP SHOT NOT INCLUDED" << std::endl;
+			table.startDetection();
+			DropShot(proj, uart, cam, table, colTrack, conTrack, maxScore);
+			table.stopDetection();
 			break;
 		   default:
-		std::cout << "ERROR WHEN CHOOSING GAME MODE" << std::endl;
+			std::cout << "ERROR WHEN CHOOSING GAME MODE" << std::endl;
 			break;
 		}
                 break;
@@ -112,10 +112,9 @@ int main(int argc, char ** argv){
 		gameMode = (gameMode + 1) % 2;
 		break;
 	    case D:
-		proj.writeText(exitStr, 4, 800, 700, 0, 0, 255);
+		proj.writeText(exitStr, 4, 860, 700, 0, 0, 255);
 		if(lastPress == D){
 			returnVal = SHUTDOWN;
-
 		}
 		break;
             default:
@@ -141,11 +140,11 @@ void updateMainMenu(Projector& proj, std::string& path, int32_t maxScore, int32_
 	    case 1: gameModeStr = "Drop Shot"; break;
 	    default: std::cout << "IMPROPER GAMEMODE" << std::endl; break;
 	}
-	proj.writeText(gameModeLabel, 5, 800, 300, 255, 255, 255);
-	proj.writeText(gameModeStr, 5, 800, 400, 255, 255, 255);
+	proj.writeText(gameModeLabel, 5, 860, 300, 255, 255, 255);
+	proj.writeText(gameModeStr, 5, 860, 400, 255, 255, 255);
 	proj.drawCenterLine();
-        proj.writeText(maxScoreLabel, 5, 800, 100, 255, 255, 255);
-        proj.writeText(maxScoreStr, 5, 800, 200, 255, 255, 255);
+        proj.writeText(maxScoreLabel, 5, 860, 100, 255, 255, 255);
+        proj.writeText(maxScoreStr, 5, 860, 200, 255, 255, 255);
         proj.renderTiff(path,80,150,.25);
         proj.refresh();
 }

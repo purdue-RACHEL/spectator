@@ -32,6 +32,15 @@ class Table{
 	bool stopSample;
 	std::list<BounceStore> bounceList;
 	int bounceListI;
+	
+	// Color Picker Params
+        int Hue_Lower_Value;//initial hue value(lower)//
+        int Hue_Upper_Value;//initial hue value(upper)//
+        int Saturation_Lower_Value;//initial saturation(lower)// 
+        int Saturation_Upper_Value;//initial saturation(upper)//
+        int Value_Lower;//initial value (lower)//    
+        int Value_Upper;//initial saturation(upper)//
+
 
 	//Initializes Table.
 	//CameraInterface: Current Camera Interface
@@ -41,7 +50,7 @@ class Table{
         Table(CameraInterface&, ColorTracker&, ContourTracker&, int);
 	//Creates a Popup window to move around a point
 	//const char *: Name of window
-        cv::Point2f setPointGUI(const char *);
+        cv::Point2f setPointGUI(const char *, cv::Point2f&);
 	//Calls setPointGUI to set the edges of the table
         void setTableBorder();
 	//Returns the normalized coords of the ball on the table

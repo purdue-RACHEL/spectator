@@ -11,7 +11,7 @@ BUILDDIR=os.getcwd()+'/build/'
 SRCDIR=os.getcwd()+'/src/'
 
 # Set up enivronment
-env = Environment(CCFLAGS='-fpermissive -std=c++14 -I/home/rachel/git/spectator/inc/OpenNI2/Include -I/usr/local/include/opencv4', 
+env = Environment(CCFLAGS='-O3 -fpermissive -std=c++14 -I/home/rachel/git/spectator/inc/OpenNI2/Include -I/usr/local/include/opencv4', 
         LIBS=['pthread', 'tiff', 'OpenNI2', 'opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_highgui', 'opencv_video', 'opencv_imgproc', 'opencv_videoio', 'opencv_optflow'], LIBPATH=['/home/rachel/git/spectator', '/usr/local/lib'],ENV = os.environ)
 
 # Define build options

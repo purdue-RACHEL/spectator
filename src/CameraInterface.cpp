@@ -100,6 +100,12 @@ cv::Mat CameraInterface::readColor() {
 	cv::Mat colorRaw = cv::Mat(m_colorFrame.getHeight(), m_colorFrame.getWidth(), CV_8UC3, (void *) m_colorFrame.getData());
 	cv::Mat colorMat;
 	cv::cvtColor(colorRaw, colorMat, cv::COLOR_BGR2RGB);
+	//Resize to a lower resolution to decrease processing time
+	/*
+	int newW = colorMat.cols * .8;
+	int newH = colorMat.rows * 1;
+	cv::resize(colorMat, colorMat, cv::Size(newW,newH), cv::INTER_LANCZOS4);
+	*/
 	return colorMat;
 }
 

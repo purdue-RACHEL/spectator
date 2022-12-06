@@ -155,8 +155,8 @@ void Projector::updateScore(int scoreRed, int scoreBlue) {
 	Projector &proj = *this;
 	std::string redText = std::to_string(scoreRed);
 	std::string blueText = std::to_string(scoreBlue);
-	writeRotateText(blueText,5,proj.w/2 + 150,proj.h-20,0,0,255,270);
-	writeRotateText(redText,5,proj.w/2 - 150, 20, 255,0,0,90);
+	writeRotateText(redText,5,proj.w/2 + 150,proj.h-20,255,255,255,270);
+	writeRotateText(blueText,5,proj.w/2 - 150, 20, 255,255,255,90);
 }
 
 //Pulled logic out into separate function so that an arbitrary font can be used if needed -JH

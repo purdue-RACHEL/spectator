@@ -7,7 +7,7 @@
 // Defines
 #define SCORE_MAX UINT32_MAX
 #define BOUNCE_TIMEOUT_MS   3000
-#define UART_POLL_MS        30
+#define UART_POLL_MS        33
 
 // Type Declarations
 typedef uint32_t score_t;

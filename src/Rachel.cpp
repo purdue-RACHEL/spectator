@@ -13,7 +13,7 @@ score_t score_blue;
 std::chrono::milliseconds last_score_timeout;
 
 GameStatus gameStatus;
-bool dropShotGrid[10][5] = {false};
+bool dropShotGrid[GRID_SIZE * 2][GRID_SIZE];
 
 int VanillaShot(Projector& proj, UartDecoder& uart, CameraInterface& cam, ColorTracker& colTrack, ContourTracker& conTracker, int32_t maxScore)
 {
@@ -131,7 +131,7 @@ StatusChange handleBounce(Bounce bounce) {
                     statusChange = FAILED_SCORE_CHANGE;
                 }
             } else if(previous_bounce == BLUE) {
-                if(score_red != SCORE_MAX) {
+		if(score_red != SCORE_MAX) {
                     score_red += 1;
                     statusChange = SCORE_CHANGE;
                 } else {
@@ -141,7 +141,7 @@ StatusChange handleBounce(Bounce bounce) {
             timeout = invalid_timeout;
             previous_bounce = NOBOUNCE;
         }
-    }
+}
     
     return statusChange;
 }
@@ -151,7 +151,6 @@ StatusChange handleButton(Button button) {
     StatusChange statusChange = NO_CHANGE;
 
     if(button == NOPRESS) { return statusChange; }
-    std::cout << "BUTTON PRESSED " << button << std::endl;
     
     /*
     START-GAME MENU (GAME):
@@ -177,22 +176,22 @@ StatusChange handleButton(Button button) {
     */
     if(gameStatus == STARTUP || gameStatus == ACTIVE || gameStatus == PAUSE) {
         switch(button) {
-            case ONE:
+            case A:
 		if(gameStatus == PAUSE){
                 	if(score_red != SCORE_MAX)  { score_red += 1; statusChange = SCORE_CHANGE; }
                 	else                        { statusChange = FAILED_SCORE_CHANGE; }
 		} break;
-            case A:
+            case ONE:
 		if(gameStatus == PAUSE) { 
                 	if(score_blue != SCORE_MAX) { score_blue += 1; statusChange = SCORE_CHANGE; }
                 	else                        { statusChange = FAILED_SCORE_CHANGE; }
 		} break;
-            case FOUR:
+            case B:
 		if(gameStatus == PAUSE) { 
 			if(score_red != 0)          { score_red -= 1; statusChange = SCORE_CHANGE; }
 			else                        { statusChange = FAILED_SCORE_CHANGE; }
 		} break;
-            case B:
+            case FOUR:
 		if(gameStatus == PAUSE) { 
 			if(score_blue != 0)         { score_blue -= 1; statusChange = SCORE_CHANGE; }
 			else                        { statusChange = FAILED_SCORE_CHANGE; }
@@ -211,6 +210,9 @@ StatusChange handleButton(Button button) {
             case ZERO: 
                 if (gameStatus == PAUSE) {
                     score_red = score_blue = 0;
+                    for(int i = 0; i < GRID_SIZE*2; i++)
+                        for(int j = 0; j < GRID_SIZE; j++)
+                            dropShotGrid[i][j] = true;
 		    gameStatus = ACTIVE;
                     statusChange = RESTART_CHANGE;
                 } break;
@@ -225,11 +227,11 @@ StatusChange handleButton(Button button) {
     */
     } else if(gameStatus == GAMEOVER) {
         switch(button) {
-            case FOUR:
+            case B:
 		if (score_red != 0) { score_red -= 1; }
                 statusChange = SCORE_CHANGE;
                 gameStatus = PAUSE; break;
-            case B:
+            case FOUR:
 		if (score_blue != 0) { score_blue -= 1; }
                 statusChange = SCORE_CHANGE;
                 gameStatus = PAUSE; break;
@@ -238,7 +240,6 @@ StatusChange handleButton(Button button) {
                 gameStatus = ACTIVE;
                 statusChange = RESTART_CHANGE; break;
             case POUND:
-		std::cout << "THIS" << std::endl;
 		gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
         }
     }
@@ -258,6 +259,12 @@ StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc) {
     if(gameStatus != ACTIVE) { return statusChange; }
 
     if(bounce != NOBOUNCE && (curr_time > last_score_timeout)) {
+	// exit if ball was not seen
+	/*
+	if (bounceLoc.x == -1){
+		return statusChange;
+	}
+	*/
 
         // serve condition
         if(previous_bounce == NOBOUNCE) {
@@ -286,6 +293,9 @@ StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc) {
 		    last_score_timeout = curr_time + std::chrono::milliseconds(SCORE_TIMEOUT_MS);
                 }
 
+	    for(int i = 0; i < GRID_SIZE * 2; i++)
+		for(int j = 0; j < GRID_SIZE; j++)
+		    dropShotGrid[i][j] = true;
                 previous_bounce = NOBOUNCE;
                 timeout = invalid_timeout;
                     
@@ -294,20 +304,20 @@ StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc) {
                 previous_bounce = bounce;
 
                 // NEW
-                int x = bounceLoc.x * 10;
-                int y = bounceLoc.y * 5;
+                int x = bounceLoc.x * GRID_SIZE *2;
+                int y = bounceLoc.y * GRID_SIZE;
 
                 // this grid already hit
                 if(dropShotGrid[x][y] == false) {
 
                     if(bounce == RED)
-                        score_blue++;
-                    else if(bounce == BLUE)
                         score_red++;
+                    else if(bounce == BLUE)
+                        score_blue++;
 
                     // TODO: reset whole grid here?
-                    for(int i = 0; i < 10; i++)
-                        for(int j = 0; j < 5; j++)
+                    for(int i = 0; i < GRID_SIZE*2; i++)
+                        for(int j = 0; j < GRID_SIZE; j++)
                             dropShotGrid[i][j] = true;
                 } else {
                     dropShotGrid[x][y] = false;
@@ -338,6 +348,9 @@ StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc) {
                     statusChange = FAILED_SCORE_CHANGE;
                 }
             }
+	    for(int i = 0; i < GRID_SIZE*2; i++)
+		for(int j = 0; j < GRID_SIZE; j++)
+		    dropShotGrid[i][j] = true;
             timeout = invalid_timeout;
             previous_bounce = NOBOUNCE;
         }
@@ -357,28 +370,28 @@ void updateDisplay(Projector& proj) {
 		path= "/home/rachel/git/spectator/menus/Active.tiff";
     		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
                 proj.drawCenterLine();
-		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
-		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
-		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
-        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		proj.writeText(redScoreLabel, 5, 860, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 860, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 860, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 860, 400, 255, 0, 0);
 		break;
         case GAMEOVER:  
 		path= "/home/rachel/git/spectator/menus/GameOver.tiff"; 
     		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
                 proj.drawCenterLine();
-		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
-		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
-		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
-        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		proj.writeText(redScoreLabel, 5, 860, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 860, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 860, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 860, 400, 255, 0, 0);
 		break;
         case STARTUP:   
 		path= "/home/rachel/git/spectator/menus/StartUp.tiff"; 
     		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
                 proj.drawCenterLine();
-		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
-		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
-		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
-        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		proj.writeText(redScoreLabel, 5, 860, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 860, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 860, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 860, 400, 255, 0, 0);
 		break;
 	case ACTIVE:
                 proj.drawCenterLine();
@@ -391,6 +404,11 @@ void updateDisplay(Projector& proj) {
 int DropShot(Projector& proj, UartDecoder& uart, CameraInterface& cam, Table& table, ColorTracker& colTrack, ContourTracker& conTracker, int32_t maxScore)
 {
     // Init Globals
+    for (int i=0; i<GRID_SIZE * 2; i++){
+	for (int j=0; j<GRID_SIZE; j++){
+		dropShotGrid[i][j] = true;
+	}
+    }
     gameStatus = ACTIVE;
     score_red = 0;
     score_blue = 0;
@@ -425,7 +443,7 @@ int DropShot(Projector& proj, UartDecoder& uart, CameraInterface& cam, Table& ta
         button = uart.getButton();
 
         // TODO: fix this if necessary
-        if(bounce == RED || bounce == BLUE) {
+        if(1) {
             cv::Point2f bounceLoc = cv::Point2f(0,0);
             bounceLoc = table.getAveragedPos(uart.last_time, uart.curr_time);
             bounceEvent = handleDropBounce(bounce, bounceLoc);
@@ -460,48 +478,50 @@ void updateDisplayDropShot(Projector& proj) {
 		path= "/home/rachel/git/spectator/menus/Active.tiff";
     		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
                 proj.drawCenterLine();
-		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
-		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
-		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
-        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		proj.writeText(redScoreLabel, 5, 860, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 860, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 860, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 860, 400, 255, 0, 0);
 		break;
         case GAMEOVER:  
 		path= "/home/rachel/git/spectator/menus/GameOver.tiff"; 
     		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
                 proj.drawCenterLine();
-		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
-		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
-		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
-        	proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		proj.writeText(redScoreLabel, 5, 860, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 860, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 860, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 860, 400, 255, 0, 0);
 		break;
         case STARTUP:   
 		path= "/home/rachel/git/spectator/menus/StartUp.tiff"; 
     		proj.renderTiff(path,80,150,.25); //need to adjust scale and location
                 proj.drawCenterLine();
-		proj.writeText(redScoreLabel, 5, 800, 100, 0,0,255);
-		proj.writeText(redScoreStr, 5, 800, 200, 0, 0, 255);
-		proj.writeText(blueScoreLabel, 5, 800, 300, 255,0,0);
-        proj.writeText(blueScoreStr, 5, 800, 400, 255, 0, 0);
+		proj.writeText(redScoreLabel, 5, 860, 100, 0,0,255);
+		proj.writeText(redScoreStr, 5, 860, 200, 0, 0, 255);
+		proj.writeText(blueScoreLabel, 5, 860, 300, 255,0,0);
+        	proj.writeText(blueScoreStr, 5, 860, 400, 255, 0, 0);
 		break;
 	case ACTIVE:
-        float squareH = proj.h/5;
-        float currX = 0;
-        float currY = 0;
-        for(int i=0; i<10; i++){
-            for(int j=0; j<5; j++){
-                if(dropShotGrid[i][j]) {
-                    proj.renderSquare(currX,currY,squareH,squareH,255,255,255);
-                    proj.renderSquare(currX+4,currY+4,squareH-8,squareH-8,0,0,0);
-                }
-                else {
-                    proj.renderSquare(currX,currY,squareH,squareH,0,0,255);
-                    proj.renderSquare(currX+4,currY+4,squareH-8,squareH-8,0,0,0);
-                }
-                currY += squareH;
-            } 
-            currX += squareH;
-        }
-        proj.updateScore(score_red, score_blue);
+		double squareH = proj.h/GRID_SIZE;
+		double currX = 0;
+		double currY = 0;
+		for(int i=0; i<GRID_SIZE*2; i++){
+		    currY = 0;
+		    for(int j=0; j<GRID_SIZE; j++){
+			//std::cout << i<< " " << j << ": " << dropShotGrid[i][j] << std::endl;
+			if(dropShotGrid[i][j]) {
+			    proj.renderSquare(currX,currY,squareH,squareH,75,75,75);
+			    //proj.renderSquare(currX+8,currY+8,squareH-16,squareH-16,0,0,0);
+			}
+			else {
+			    proj.renderSquare(currX,currY,squareH,squareH,0,0,0);
+			    //proj.renderSquare(currX+8,currY+8,squareH-16,squareH-16,0,0,0);
+			}
+			currY += squareH;
+		    } 
+		    currX += squareH;
+		}
+		proj.updateScore(score_red, score_blue);
 		break;
     }
     proj.refresh();
