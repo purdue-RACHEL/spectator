@@ -12,6 +12,38 @@
 #include <atomic>
 #include <list>
 
+#define SINGLE_SAMPLE 0
+
+// COLOR FILTER VALUES
+
+// ORANGE
+#define HUE_LOWER 38
+#define HUE_UPPER 82
+#define VAL_LOWER 50
+#define VAL_UPPER 255
+#define SAT_LOWER 45
+#define SAT_UPPER 255
+
+//GREEN
+/*
+#define HUE_LOWER
+#define HUE_UPPER
+#define VAL_LOWER
+#define VAL_UPPER
+#define SAT_LOWER
+#define SAT_UPPER
+*/
+
+//YELLOW
+/*
+#define HUE_LOWER
+#define HUE_UPPER
+#define VAL_LOWER
+#define VAL_UPPER
+#define SAT_LOWER
+#define SAT_UPPER
+*/
+
 class BounceStore {
     public:
 	BounceStore(cv::Point2f,int);

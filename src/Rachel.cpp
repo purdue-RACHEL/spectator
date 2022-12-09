@@ -202,7 +202,7 @@ StatusChange handleButton(Button button) {
 		else if (gameStatus == PAUSE) { gameStatus = ACTIVE; }
 	        else if (gameStatus == ACTIVE) { gameStatus = PAUSE; }
                 statusChange =  MENU_CHANGE; break;
-            case POUND: 
+            case D: 
 		if (gameStatus == PAUSE){
 		    gameStatus = EXITGAME;
 		    statusChange = EXIT2MAIN_CHANGE; 
@@ -239,7 +239,7 @@ StatusChange handleButton(Button button) {
                 score_red = score_blue = 0;
                 gameStatus = ACTIVE;
                 statusChange = RESTART_CHANGE; break;
-            case POUND:
+            case D:
 		gameStatus = EXITGAME; statusChange = EXIT2MAIN_CHANGE; break;
         }
     }
@@ -307,18 +307,32 @@ StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc) {
                 int x = bounceLoc.x * GRID_SIZE *2;
                 int y = bounceLoc.y * GRID_SIZE;
 
-                // this grid already hit
-                if(dropShotGrid[x][y] == false) {
+		std::cout << "MICRO SIDE: " << previous_bounce << std::endl;
 
+		std::cout << "BOUNCE LOC: (" << bounceLoc.x << "," << bounceLoc.y << ")" << std::endl;
+
+		if(x < 0) {
+		    std::cout << "NO LOCATION DATA" << std::endl;
+		} 
+		else if(previous_bounce == RED && bounceLoc.x < .5) {
+		    std::cout << "SAME SIDE BOUNCE" << std::endl;
+		} else if (previous_bounce == BLUE && bounceLoc.x > .5) {
+		    std::cout << "SAME SIDE BOUNCE" << std::endl;
+		}
+		else if(dropShotGrid[x][y] == false) {
                     if(bounce == RED)
                         score_red++;
                     else if(bounce == BLUE)
                         score_blue++;
+		    last_score_timeout = curr_time + std::chrono::milliseconds(SCORE_TIMEOUT_DROP_MS);
 
                     // TODO: reset whole grid here?
                     for(int i = 0; i < GRID_SIZE*2; i++)
                         for(int j = 0; j < GRID_SIZE; j++)
                             dropShotGrid[i][j] = true;
+		    timeout = invalid_timeout;
+		    previous_bounce = NOBOUNCE;
+		    return SCORE_CHANGE;
                 } else {
                     dropShotGrid[x][y] = false;
                 }
@@ -354,6 +368,7 @@ StatusChange handleDropBounce(Bounce bounce, cv::Point2f bounceLoc) {
             timeout = invalid_timeout;
             previous_bounce = NOBOUNCE;
         }
+
     }
     
     return statusChange;
@@ -460,7 +475,7 @@ int DropShot(Projector& proj, UartDecoder& uart, CameraInterface& cam, Table& ta
 
         if(gameStatus != EXITGAME && ((score_red >= maxScore && score_red - score_blue > 1) || (score_blue >= maxScore && score_blue - score_red > 1))) {
             gameStatus = GAMEOVER;
-            //std::cout << "Game Over message" << std::endl;
+            std::cout << "Game Over message" << std::endl;
         }
         updateDisplayDropShot(proj);
     }
@@ -510,7 +525,7 @@ void updateDisplayDropShot(Projector& proj) {
 		    for(int j=0; j<GRID_SIZE; j++){
 			//std::cout << i<< " " << j << ": " << dropShotGrid[i][j] << std::endl;
 			if(dropShotGrid[i][j]) {
-			    proj.renderSquare(currX,currY,squareH,squareH,75,75,75);
+			    proj.renderSquare(currX,currY,squareH,squareH,125,125,125);
 			    //proj.renderSquare(currX+8,currY+8,squareH-16,squareH-16,0,0,0);
 			}
 			else {
@@ -520,7 +535,9 @@ void updateDisplayDropShot(Projector& proj) {
 			currY += squareH;
 		    } 
 		    currX += squareH;
+
 		}
+		proj.drawCenterLine();
 		proj.updateScore(score_red, score_blue);
 		break;
     }

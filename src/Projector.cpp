@@ -19,6 +19,7 @@ int main(int argc, char ** argv){
 	std::string uartDeviceStr = "/dev/ttyUSB0";
 	UartDecoder uart(uartDeviceStr);
 	for(;;){
+		proj.renderSquare(100,100,100,200,75,75,75);
 		std::string path= "/home/rachel/git/spectator/menus/gameover.tiff";
 		proj.renderTiff(path,0,0,.5f);
 		if(proj.refresh()){
@@ -68,31 +69,7 @@ void Projector::drawLine(cv::Point2f p1, cv::Point2f p2, int width, cv::Scalar c
 }	
 void Projector::renderSquare(int x, int y, int w, int h, int r, int g, int b){
 	Projector &proj = *this;
-	if((y<0) || (x<0)){
-		return;
-	}
-        if((x > proj.w) || (y > proj.h)){
-            	return;
-	}
-	if(x < 0){
-		w = w + x;
-		x = 0;
-	}
-	if(y < 0){
-		h = h + y;
-		y = 0;
-	}
-	if(x + w >=  proj.w){
-		w = proj.w - x - 1;	
-	}
-	if(y + h >=  proj.h){
-		h = proj.h - y - 1;	
-	}
-	for(int u = x;u<x+w;u++){
-		for(int v = y; v< y + h;v++){
-			proj.display.at<cv::Vec3b>(v,u) = cv::Vec3b(b,g,r);
-		}
-	}	
+	cv::rectangle(proj.display,cv::Point2i(x,y),cv::Point2i(x+w,y+h),cv::Scalar(b,g,r),-1);
 }
 
 void Projector::renderSquare(int x, int y, int w, int h, cv::Vec3b color){

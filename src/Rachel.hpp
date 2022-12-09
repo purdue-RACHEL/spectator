@@ -13,8 +13,9 @@
 #define SCORE_MAX UINT32_MAX
 #define BOUNCE_TIMEOUT_MS   1500
 #define SCORE_TIMEOUT_MS    3000
+#define SCORE_TIMEOUT_DROP_MS    3000
 #define UART_POLL_MS        30
-#define GRID_SIZE 4
+#define GRID_SIZE 3
 
 // Type Declarations
 typedef uint32_t score_t;
