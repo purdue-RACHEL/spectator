@@ -84,6 +84,7 @@ Table::Table(CameraInterface& cam, ColorTracker& colTrack, ContourTracker& conTr
 		cv::createTrackbar("Val_Upper", "Adjust", &Value_Upper, 255);//track-bar for upper value//
 	}
 void Table::detectionThread(){
+	std::cout << "START DETECTION" << std::endl;
 	Table &table = *this;
 	std::chrono::milliseconds time_offset = std::chrono::milliseconds(1000/table.sampleFreq);
 	std::chrono::milliseconds lastSample;
@@ -137,9 +138,11 @@ cv::Point2f Table::getAveragedPos(int startTime, int stopTime){
 }
 void Table::startDetection(){
 	samplerThread = std::thread(&Table::detectionThread,this);  
+	this->stopSample = FALSE;
 }
 void Table::stopDetection(){
 	this->stopSample = TRUE;
+	samplerThread.join();
 }
 void Table::setTableBorder(){
 	Table &table = *this;

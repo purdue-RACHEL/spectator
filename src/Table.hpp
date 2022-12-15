@@ -12,7 +12,7 @@
 #include <atomic>
 #include <list>
 
-#define SINGLE_SAMPLE 0
+#define SINGLE_SAMPLE 1
 
 // COLOR FILTER VALUES
 
